@@ -11,9 +11,9 @@ knitr::opts_chunk$set(echo = TRUE)
 library("tidyverse")
 ```
 #2. Responda as seguintes duas perguntas: 
-a. Qual das sÃ©ries que vocÃª escolheu Ã© mais bem avaliada no IMDB? A diferenÃ§a Ã© grande? Pequena? 
-b. Qual das sÃ©ries que vocÃª escolheu tem episÃ³dios de qualidade mais irregular segundo o IMDB? A diferenÃ§a Ã© grande? Pequena?
-Repare que as perguntas deixam para vocÃª a responsabilidade de decidir como analisar quem Ã© mais bem avaliada, o que Ã© irregularidade entre episÃ³dios, etc.
+a. Qual das séries que você escolheu é mais bem avaliada no IMDB? A diferença é grande? Pequena? 
+b. Qual das séries que você escolheu tem episódios de qualidade mais irregular segundo o IMDB? A diferença é grande? Pequena?
+Repare que as perguntas deixam para você a responsabilidade de decidir como analisar quem é mais bem avaliada, o que é irregularidade entre episódios, etc.
 
 ```{r}
 series_from_imdb <- read.csv("../dados/series_from_imdb.csv")
@@ -30,8 +30,8 @@ ggplot(dados, mapping = aes(x = series_name, y= UserRating)) +
   geom_text(data = mediana_series, mapping= aes(x=series_name, y=mediana+0.1, label=mediana), color = "brown1")
 ```
 
-a. De acordo com o grÃ¡fico boxplot acima, vemos que Mr Robot tem uma mediana mais alta, o que significa que 50% das avaliacoes estao acima de 8.8, jÃ¡ Flash foi a segunda sÃ©rie mais bem avaliada, apesar da pouca diferenÃ§a de 0.1 na mediana.
-b. A sÃ©rie com notas mais irregulares foi Flash, com notas variando de (aproximadamente) 6 a 9.7, uma variaÃ§Ã£o de 3.7, o que podemos considerar alta com relaÃ§Ã£o a Mr. Robot que variou aproximadamente 0.8.
+a. De acordo com o gráfico boxplot acima, vemos que Mr Robot tem uma mediana mais alta, o que significa que 50% das avaliacoes estao acima de 8.8, já Flash foi a segunda série mais bem avaliada, apesar da pouca diferenÃ§a de 0.1 na mediana.
+b. A série com notas mais irregulares foi Flash, com notas variando de (aproximadamente) 6 a 9.7, uma variação de 3.7, o que podemos considerar alta com relação a Mr. Robot que variou aproximadamente 0.8.
 ```{r}
 flash <- series_from_imdb %>%
   filter(series_name=="Flash")
@@ -51,29 +51,30 @@ sd_mr_robot <- format(round(sd(mr_robot[,7]),3), nsmall=3)
 mean_vikings <- format(round(mean(vikings[,7]),3), nsmall=3)
 sd_vikings <- format(round(sd(vikings[,7]),3), nsmall=3)
 
-cat(c("MÃ©dia Flash:", mean_flash, collapse = "\n"))
-cat(c("Desvio PadrÃ£o Flash:", sd_flash, collapse = "\n"))
+cat(c("Média Flash:", mean_flash, collapse = "\n"))
+cat(c("Desvio Padrão Flash:", sd_flash, collapse = "\n"))
 
 cat("\n")
 
 
-cat(c("MÃ©dia Mr Robot:", mean_mr_robot, collapse ="\n"))
-cat(c("Desvio PadrÃ£o Mr Robot:", sd_mr_robot, collapse ="\n"))
+cat(c("Média Mr Robot:", mean_mr_robot, collapse ="\n"))
+cat(c("Desvio Padrão Mr Robot:", sd_mr_robot, collapse ="\n"))
 
 cat("\n")
 
 
-cat(c("MÃ©dia Vikings:", mean_vikings, collapse ="\n"))
-cat(c("Desvio Vikings:", sd_vikings, collapse ="\n"))
+cat(c("Média Vikings:", mean_vikings, collapse ="\n"))
+cat(c("Desvio Padrão Vikings:", sd_vikings, collapse ="\n"))
 ```
-#O uso do desvio padrÃ£o para calcular a regularidade dos dados.
-AlÃ©m da diferenÃ§a entre as pontuaÃ§Ãµes mÃ¡ximas e mÃ­nimas, podemos concretizar a afirmaÃ§Ã£o anterior calculando o desvio padrÃ£o, valor associado ao grau de variaÃ§Ã£o de um conjunto de dados, medidos a partir do valor esperado. Calculando a mÃ©dia e o desvio padrÃ£o, vemos que o intervalo estimado para as avaliaÃ§Ãµes da sÃ©rie Flash estÃ¡ entre 8.17 e 9.26, enquanto que o valor esperado das avaliaÃ§Ãµes para a sÃ©rie Mr Robot varia menos, ou seja, tem uma qualidade mais regular segundo o IMDB, e estÃ¡ no intervalo de 8.51 e 9.25, o que pode ser considerado uma diferenÃ§a razoÃ¡vel. Se compararmos a regularidade entre Vikings e Mr Robot, ambas aparentam maior regularidade e existe uma pequena diferenÃ§a no desvio padrao entre elas, de apenas 0.006, indicando assim uma maior regularidade para Mr Robot, jÃ¡ que o menor valor no desvio padrÃ£o indica menor variaÃ§Ã£o de valores.
+#O uso do desvio padrão para calcular a regularidade dos dados.
+Além da diferença entre as pontuações máximas e mínimas, podemos concretizar a afirmação anterior calculando o desvio padrão, valor associado ao grau de variação de um conjunto de dados, medidos a partir do valor esperado. Calculando a média e o desvio padrão, vemos que o intervalo estimado para as avaliações da série Flash está entre 8.17 e 9.26, enquanto que o valor esperado das avaliações para a série Mr Robot varia menos, ou seja, tem uma qualidade mais regular segundo o IMDB, e está no intervalo de 8.51 e 9.25, o que pode ser considerado uma diferença razoável. Se compararmos a regularidade entre Vikings e Mr Robot, ambas aparentam maior regularidade e existe uma pequena diferença no desvio padrao entre elas, de apenas 0.006, indicando assim uma maior regularidade para Mr Robot, já que o menor valor no desvio padrão indica menor variação no conjunto de dados.
 
+#Estudo do conjunto de dados analisados
+
+É importante estudarmos os dados que estão sendo utilizados para analisarmos, dados mal elaborados pode nos levar a conlusões erradas. Na série analisada Flash, há um episódio com apenas 10 votos de usuários diferentes, essa quantidade de votos é suficiente para calcular a nota da série?
 ```{r}
 series_from_imdb %>%
   filter(UserVotes == min(series_from_imdb[,8])) %>%
   select(series_name, UserVotes)
-  
-
 ```
-Falar da quantidade de votos em relaÃ§Ã£o Ã  confiabilidade dos dados
+É um número muito baixo se compararmos à outras séries mais conhecidas, porém, devemos levar em conta que o episódio foi lançado há menos de uma semana e que o resultado gerado não está totalmente fora do padrão, o que não significa que com mais votos não pode até sair do padrão (obter uma nota mais baixa que o esperado, por exemplo, 7), mas a análise feita não sofreria muita alteração, uma vez que tivemos problema com apenas uma nota de 67 anteriores que obteve uma quantidade de votações mais condizente com a série.
