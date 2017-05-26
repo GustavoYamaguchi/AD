@@ -1,0 +1,59 @@
+---
+title: "Aula 1 - CP4"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("ggplot2")
+library("dplyr")
+library("tidyr")
+library("readr")
+```
+
+## R Markdown
+
+#Pergunta: Séries com grande quantidade de índice r1 é uma série mal avaliada?
+
+```{r}
+dados_series <- series_from_imdb %>% 
+  group_by( series_name) %>% 
+    summarise(mediana = median(r1), media = mean(r1))
+
+maior_mediana <- max(dados_series[,2])
+maior_media <- max(dados_series[,3])
+
+dados_series %>% 
+  filter(mediana == maior_mediana | media == maior_media)
+```
+
+Vemos que a maior média e mediana de r1 é para série 'The 100', o que significa que essa série foi a que mais teve haters, agora precisamos analisar se por ela receber muitas avaliações negativas ela é uma série mal avaliada.
+
+
+
+```{r}
+the_100 <- series_from_imdb %>% 
+  filter(series_name=="The 100")
+  
+ggplot(the_100, mapping = aes(x = series_name, y= UserRating)) +
+  geom_point() +
+  geom_line()
+```
+
+```{r}
+series_baixa_media <- series_from_imdb %>% 
+  group_by(series_name) %>% 
+  summarise(media = mean(UserRating)) %>% 
+  filter(media < 8)
+```
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
