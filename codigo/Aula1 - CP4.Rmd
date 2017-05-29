@@ -110,7 +110,7 @@ Comparando a temporada mais bem avaliada (segunda temporada) com a avaliacao ger
 
 ###1. Na primeira pergunta vimos que o alto indice de r1 nao foi um fator decisivo para a serie pior avaliada, mas que a colocou entre as piores series. A ausencia (menor indice) em r10 seria decisivo para a pior série? Por que?
 
-###2. Com a segunda pergunta, observamos que uma temporada melhor avaliada, nao teve uma diferenca gritante comparada a avaliacao geral da serie, esse fator pode ser observado melhor em series com menos temporadas e mais dificil de ser observado em series com mais temporadas?
+###2. Com a segunda pergunta, observamos que uma temporada melhor avaliada, nao teve uma diferenca gritante comparada a avaliacao geral da serie, esse fator eh mais dificil de ser observado em series com mais temporadas?
 
 ##Respostas:
 ###1. Primeiro devemos verificar qual serie tem menor indice r10:
@@ -143,4 +143,62 @@ series_r10 %>%
 ```
 
 Porem, se compararmos a tabela acima dos piores indices de r10 com a tabela das piores series (avaliacao geral), e veremos que as duas primeiras series se repetem em ambas as tabelas, mas as outras "piores" series nao aparecem na tabela de menores indices de r10. Portanto, concluimos que eh uma coincidencia, pois ocorreu apenas em 2 casos (The Simpsons e Modern Family).
+
+###2. Primeiro devemos destacar as series com mais temporadas:
+```{r}
+maior_qt_temporada <- max(series_from_imdb[,3])
+series_from_imdb %>% 
+  filter(season == maior_qt_temporada) %>% 
+    distinct(series_name) %>% 
+      slice(2:4) #GREYS ANATOMY ESTA COM ERRO PARA O FILTER PELO NOME
+```
+
+As series sao Friends, How I met your mother e The Simpsons.
+```{r}
+the_simp <- series_from_imdb %>% 
+  filter(series_name=="The Simpsons")
+himym <- series_from_imdb %>% 
+  filter(series_name=="How I Met Your Mother")
+friends <- series_from_imdb %>% 
+  filter(series_name=="Friends")
+#greys_anatomy <- series_from_imdb %>% GREYS ANATOMY ESTA COM ERRO PARA O FILTER PELO NOME
+  #filter(series_name=="Grey's Anatomy")
+
+the_simp%>% 
+  group_by(season) %>% 
+  summarise(media = mean(UserRating), mediana = median(UserRating), desvio=sd(UserRating))
+himym%>% 
+  group_by(season) %>% 
+  summarise(media = mean(UserRating), mediana = median(UserRating), desvio=sd(UserRating))
+friends%>% 
+  group_by(season) %>% 
+  summarise(media = mean(UserRating), mediana = median(UserRating), desvio=sd(UserRating))
+```
+
+Em The Simpsons a melhor temporada eh a quinta com media 8.35 e mediana em 8.4;
+Em How I Met Your Mother a melhor temporada eh a segunda com media 8.55 e mediana em 8.5;
+Em Friends a melhor temporada eh a quinta com media 8.7 e mediana em 8.6.
+
+```{r}
+the_simp %>% 
+  summarise(media = mean(UserRating), mediana = median(UserRating), desvio=sd(UserRating))
+himym %>% 
+  summarise(media = mean(UserRating), mediana = median(UserRating), desvio=sd(UserRating))
+friends %>% 
+  summarise(media = mean(UserRating), mediana = median(UserRating), desvio=sd(UserRating))
+```
+
+Acima valor esperado, mediana e desvio padrao de cada serie (avaliacao geral).
+Para The Simpsons vemos que a media da serie foi 7.37, quando a melhor temporada ficou com 8.35, resultando numa variacao de 0.98, quase 1 ponto de variacao.
+Para How I Met Your Mother, a media geral eh de 8.22 e da melhor temporada eh de 8.55, 0.33 de diferenca.
+Para Friends, a media geral da serie foi de 8.54 ja da melhor temporada foi de 8.7, diferenca de 0.16.
+
+Falando ainda dos resultados acima, calculamos propositalmente o desvio padrao. Esse valor indica o grau de variação de um conjunto de dados, medidos a partir do valor esperado. Observamos que as temporadas que mais se destacam do restante da serie tem um valor alto de desvio padrao. Esse valor (desvio padrao) esta indica a variacao de valores entre temporadas das series.
+
+####Comparando os desvios padrões e confirmando a afirmacao anterior: 
+The Simpsons com uma alta taxa desvio padrao (DP) 0.74 teve uma variacao de 0.98 nas avaliacoes da temporada com a avaliacao geral.
+How I Met Your Mother com uma taxa regular de DP 0.56 teve uma variacao de 0.33 nas avaliacoes da temporada com a avaliacao geral.
+Friends com uma taxa baixa de DP 0.36 teve uma variacao de 0.16 nas avaliacoes da temporada com a avaliacao geral.
+
+
 
