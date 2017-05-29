@@ -11,49 +11,136 @@ library("tidyr")
 library("readr")
 ```
 
-## R Markdown
+##Pergunta 1: Series com grande quantidade de indice r1 eh uma serie mal avaliada?
 
-#Pergunta: SÃ©ries com grande quantidade de Ã­ndice r1 Ã© uma sÃ©rie mal avaliada?
+####Resposta:
 
 ```{r}
-dados_series <- series_from_imdb %>% 
+series_from_imdb <- read.csv("../dados/series_from_imdb.csv")
+series_r1 <- series_from_imdb %>% 
   group_by( series_name) %>% 
     summarise(mediana = median(r1), media = mean(r1))
 
-maior_mediana <- max(dados_series[,2])
-maior_media <- max(dados_series[,3])
+maior_mediana_r1 <- max(series_r1[,2])
+maior_media_r1 <- max(series_r1[,3])
 
-dados_series %>% 
-  filter(mediana == maior_mediana | media == maior_media)
+series_r1 %>% 
+  filter(mediana == maior_mediana_r1 | media == maior_media_r1)
 ```
 
-Vemos que a maior mÃ©dia e mediana de r1 Ã© para sÃ©rie 'The 100', o que significa que essa sÃ©rie foi a que mais teve haters, agora precisamos analisar se por ela receber muitas avaliaÃ§Ãµes negativas ela Ã© uma sÃ©rie mal avaliada.
-
-
+Vemos que a maior media e mediana de r1 foi da serie 'The 100', o que significa que essa serie foi a que mais teve haters, agora precisamos analisar se por ela receber muitas avaliacoes negativas ela eh uma serie mal avaliada.
 
 ```{r}
 the_100 <- series_from_imdb %>% 
   filter(series_name=="The 100")
   
-ggplot(the_100, mapping = aes(x = series_name, y= UserRating)) +
-  geom_point() +
-  geom_line()
+ggplot(the_100, mapping = aes(x = series_ep, y= UserRating)) +
+  geom_point(colour="blue") +
+  geom_line(colour="darkorange") 
 ```
+
+Vemos que houve grandes variações de notas alcançadas pela serie The 100, o que influencia na avaliação geral da serie.
+Podemos ver na tabela a seguir que a serie nao obteve uma avaliacao tao boa justamente por essa irregularidade entre os episodios 36 e 48.
 
 ```{r}
 series_baixa_media <- series_from_imdb %>% 
   group_by(series_name) %>% 
-  summarise(media = mean(UserRating)) %>% 
-  filter(media < 8)
+  summarise(media = mean(UserRating), mediana = median(UserRating)) %>% 
+  filter(media < 8.2 | mediana <= 8.2)
+
+series_baixa_media %>% 
+  arrange(media)
 ```
 
+Na lista acima vemos as series com medias mais baixas. Podemos perceber que a serie com maior indice r1 (The 100), nao eh a serie pior avaliada, The Simpson ocupou esse posto, já The 100 está na terceira pior posicao (dos piores). Concluindo, a serie com maior indice r1 eh mal avaliada, porem, nao eh a pior na avaliacao do IMDB.
 
-## Including Plots
 
-You can also embed plots, for example:
+##Pergunta 2: Se analisarmos a temporada que foi melhor avaliada de uma série, ela se destaca da nota geral da série? Muito? Pouco?
+####Resposta:
+Já que estamos analisando a serie The 100 e ela obteve grandes variacoes de pontuacoes, podemos analisar cada temporada e verificar se houve grande diferenca na avaliacao da melhor temporada e a serie no geral.
+```{r}
+the100_sea1 <- 
+  the_100 %>% 
+  filter(season==1)
+the100_sea2 <- 
+  the_100 %>% 
+  filter(season==2)
+the100_sea3 <- 
+  the_100 %>% 
+  filter(season==3)
+the100_sea4 <- 
+  the_100 %>% 
+  filter(season==4)
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+ggplot(the100_sea1, mapping = aes(x = season_ep, y= UserRating)) +
+  geom_point(data = the100_sea1, colour="blue") +
+  geom_point(data = the100_sea2, colour="yellow") +
+  geom_point(data = the100_sea3, colour="green") +
+  geom_point(data = the100_sea4, colour="magenta") +
+  geom_line(data = the100_sea1, colour="blue") +
+  geom_line(data = the100_sea2, colour="yellow") +
+  geom_line(data = the100_sea3, colour="green") +
+  geom_line(data = the100_sea4, colour="magenta") +
+  annotate("text", x=14.5, y=8,label="Cor - Temporada
+Azul -  1
+Amarelo -  2
+Verde -  3
+Rosa -  4", colour="darkorange")
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+No gráfico acima percebemos visualmente que as temporadas 2 e 4 foram mais bem avaliadas, agora precisamos de um método para distinguir matematicamente qual das duas temporadas foi a melhor.
+
+```{r}
+the_100 %>% 
+  group_by(season) %>% 
+  summarise(media = mean(UserRating), mediana = median(UserRating), desvio=sd(UserRating))
+```
+
+Agora sim, podemos conferir numericamente que as temporadas 2 e 4 foram melhor avaliadas, e que a temporada 2 ainda obteve a mediana maior que a temporada 4. Isso indica que 50% dos episodios avaliados da temporada 2 tiveram nota acima de 8.6 e a temporada 4 teve mediana em 8.5. Devemos agora calcular a diferenca entre a temporada 2 com o restante da serie.
+
+```{r}
+the_100 %>% 
+  summarise(media = mean(UserRating), mediana = median(UserRating), desvio=sd(UserRating))
+```
+
+Comparando a temporada mais bem avaliada (segunda temporada) com a avaliacao geral da serie, nao notamos uma diferenca muito grande, visto que as medianas variam em apenas 0.25 e as medias em 0.55. Podemos considerar pouca a diferenca, porque a variacao entre notas sempre existe, e a diferenca foi de apenas 0.25 na mediana, o que significa ser uma variacao comum as series.
+
+##Perguntas derivadas:
+
+###1. Na primeira pergunta vimos que o alto indice de r1 nao foi um fator decisivo para a serie pior avaliada, mas que a colocou entre as piores series. A ausencia (menor indice) em r10 seria decisivo para a pior série? Por que?
+
+###2. Com a segunda pergunta, observamos que uma temporada melhor avaliada, nao teve uma diferenca gritante comparada a avaliacao geral da serie, esse fator pode ser observado melhor em series com menos temporadas e mais dificil de ser observado em series com mais temporadas?
+
+##Respostas:
+###1. Primeiro devemos verificar qual serie tem menor indice r10:
+
+```{r}
+series_r10 <- series_from_imdb %>% 
+  group_by( series_name) %>% 
+    summarise(mediana = median(r10), media = mean(r10))
+
+menor_mediana_r10 <- min(series_r10[,2])
+menor_media_r10 <- min(series_r10[,3])
+
+series_r10 %>% 
+  filter(mediana == menor_mediana_r10 | media == menor_media_r10)
+```
+
+The Simpson eh a serie do IMDB que tem menos episodios com notas r10. Comparemos com as piores series do IMDB:
+
+```{r}
+series_baixa_media %>% 
+  arrange(media)
+```
+
+Sim, The Simpson a serie pior avaliada pelo IMDB, eh tambem a serie com menor indice r10.
+
+```{r}
+series_r10 %>% 
+  arrange(media) %>% 
+  slice(1:5)
+```
+
+Porem, se compararmos a tabela acima dos piores indices de r10 com a tabela das piores series (avaliacao geral), e veremos que as duas primeiras series se repetem em ambas as tabelas, mas as outras "piores" series nao aparecem na tabela de menores indices de r10. Portanto, concluimos que eh uma coincidencia, pois ocorreu apenas em 2 casos (The Simpsons e Modern Family).
+
