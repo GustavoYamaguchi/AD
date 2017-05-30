@@ -120,20 +120,25 @@ $(document).ready(function () {
 </div>
 
 
+<div id="sobre-os-dados-utilizados" class="section level2">
+<h2>Sobre os dados utilizados:</h2>
+<p>Os dados utilizados nessa analise sao sobre avaliacoes de series no IMDB. Entre as variaveis encontramos os nomes das diferentes series analisadas, nota geral de cada episodio, numero da temporada, numero do episodio de cada temporada, numero do episodio da serie, e as distribuicoes de notas que variam no intervalo r1~r10 onde r1 é a pior avaliacao recebida, e logicamente, r10 a melhor avaliacao.</p>
+<p>Nessa analise estudaremos 4 questionamentos cujas respostas podem ser extraidas desses dados.</p>
+</div>
 <div id="pergunta-1-series-com-grande-quantidade-de-indice-r1-eh-uma-serie-mal-avaliada" class="section level2">
 <h2>Pergunta 1: Series com grande quantidade de indice r1 eh uma serie mal avaliada?</h2>
 <div id="resposta" class="section level4">
 <h4>Resposta:</h4>
 <pre class="r"><code>series_from_imdb &lt;- read.csv(&quot;../dados/series_from_imdb.csv&quot;)
-dados_series &lt;- series_from_imdb %&gt;% 
+series_r1 &lt;- series_from_imdb %&gt;% 
   group_by( series_name) %&gt;% 
     summarise(mediana = median(r1), media = mean(r1))
 
-maior_mediana &lt;- max(dados_series[,2])
-maior_media &lt;- max(dados_series[,3])
+maior_mediana_r1 &lt;- max(series_r1[,2])
+maior_media_r1 &lt;- max(series_r1[,3])
 
-dados_series %&gt;% 
-  filter(mediana == maior_mediana | media == maior_media)</code></pre>
+series_r1 %&gt;% 
+  filter(mediana == maior_mediana_r1 | media == maior_media_r1)</code></pre>
 <pre><code>## # A tibble: 1 × 3
 ##   series_name   mediana     media
 ##        &lt;fctr&gt;     &lt;dbl&gt;     &lt;dbl&gt;
@@ -165,11 +170,10 @@ series_baixa_media %&gt;%
 <p>Na lista acima vemos as series com medias mais baixas. Podemos perceber que a serie com maior indice r1 (The 100), nao eh a serie pior avaliada, The Simpson ocupou esse posto, já The 100 está na terceira pior posicao (dos piores). Concluindo, a serie com maior indice r1 eh mal avaliada, porem, nao eh a pior na avaliacao do IMDB.</p>
 </div>
 </div>
-<div id="pergunta-2-se-analisarmos-a-temporada-que-foi-melhor-avaliada-de-uma-serie-ela-se-destaca-da-nota-geral-da-serie-muito-pouco" class="section level1">
-<h1>Pergunta 2: Se analisarmos a temporada que foi melhor avaliada de uma série, ela se destaca da nota geral da série? Muito? Pouco?</h1>
-</div>
-<div id="resposta-1" class="section level1">
-<h1>Resposta:</h1>
+<div id="pergunta-2-se-analisarmos-a-temporada-que-foi-melhor-avaliada-de-uma-serie-ela-se-destaca-da-nota-geral-da-serie-muito-pouco" class="section level2">
+<h2>Pergunta 2: Se analisarmos a temporada que foi melhor avaliada de uma série, ela se destaca da nota geral da série? Muito? Pouco?</h2>
+<div id="resposta-1" class="section level4">
+<h4>Resposta:</h4>
 <p>Já que estamos analisando a serie The 100 e ela obteve grandes variacoes de pontuacoes, podemos analisar cada temporada e verificar se houve grande diferenca na avaliacao da melhor temporada e a serie no geral.</p>
 <pre class="r"><code>the100_sea1 &lt;- 
   the_100 %&gt;% 
@@ -216,6 +220,149 @@ Rosa -  4&quot;, colour=&quot;darkorange&quot;)</code></pre>
 <pre><code>##      media mediana    desvio
 ## 1 8.094643    8.35 0.8548088</code></pre>
 <p>Comparando a temporada mais bem avaliada (segunda temporada) com a avaliacao geral da serie, nao notamos uma diferenca muito grande, visto que as medianas variam em apenas 0.25 e as medias em 0.55. Podemos considerar pouca a diferenca, porque a variacao entre notas sempre existe, e a diferenca foi de apenas 0.25 na mediana, o que significa ser uma variacao comum as series.</p>
+</div>
+</div>
+<div id="perguntas-derivadas" class="section level2">
+<h2>Perguntas derivadas:</h2>
+<div id="na-primeira-pergunta-vimos-que-o-alto-indice-de-r1-nao-foi-um-fator-decisivo-para-a-serie-pior-avaliada-mas-que-a-colocou-entre-as-piores-series.-a-ausencia-menor-indice-em-r10-seria-decisivo-para-a-pior-serie-por-que" class="section level3">
+<h3>1. Na primeira pergunta vimos que o alto indice de r1 nao foi um fator decisivo para a serie pior avaliada, mas que a colocou entre as piores series. A ausencia (menor indice) em r10 seria decisivo para a pior série? Por que?</h3>
+</div>
+<div id="com-a-segunda-pergunta-observamos-que-uma-temporada-melhor-avaliada-nao-teve-uma-diferenca-gritante-comparada-a-avaliacao-geral-da-serie-esse-fator-eh-mais-dificil-de-ser-observado-em-series-com-mais-temporadas-mais-temporadas-indica-uma-grande-regularidade-da-serie" class="section level3">
+<h3>2. Com a segunda pergunta, observamos que uma temporada melhor avaliada nao teve uma diferenca gritante comparada a avaliacao geral da serie, esse fator eh mais dificil de ser observado em series com mais temporadas (mais temporadas indica uma grande regularidade da serie)?</h3>
+</div>
+</div>
+<div id="respostas" class="section level2">
+<h2>Respostas:</h2>
+<div id="primeiro-devemos-verificar-qual-serie-tem-menor-indice-r10" class="section level3">
+<h3>1. Primeiro devemos verificar qual serie tem menor indice r10:</h3>
+<pre class="r"><code>series_r10 &lt;- series_from_imdb %&gt;% 
+  group_by( series_name) %&gt;% 
+    summarise(mediana = median(r10), media = mean(r10))
+
+menor_mediana_r10 &lt;- min(series_r10[,2])
+menor_media_r10 &lt;- min(series_r10[,3])
+
+series_r10 %&gt;% 
+  filter(mediana == menor_mediana_r10 | media == menor_media_r10)</code></pre>
+<pre><code>## # A tibble: 1 × 3
+##    series_name   mediana     media
+##         &lt;fctr&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+## 1 The Simpsons 0.1500487 0.1762266</code></pre>
+<p>The Simpson eh a serie do IMDB que tem menos episodios com notas r10. Comparemos com as piores series do IMDB:</p>
+<pre class="r"><code>series_baixa_media %&gt;% 
+  arrange(media)</code></pre>
+<pre><code>## # A tibble: 5 × 3
+##        series_name    media mediana
+##             &lt;fctr&gt;    &lt;dbl&gt;   &lt;dbl&gt;
+## 1     The Simpsons 7.366721    7.20
+## 2    Modern Family 7.989305    8.00
+## 3          The 100 8.094643    8.35
+## 4          Scandal 8.138462    8.20
+## 5 Greyâ&lt;U+0080&gt;&lt;U+0099&gt;s Anatomy 8.287973    8.20</code></pre>
+<p>Sim, The Simpson a serie pior avaliada pelo IMDB, eh tambem a serie com menor indice r10.</p>
+<pre class="r"><code>series_r10 %&gt;% 
+  arrange(media) %&gt;% 
+  slice(1:5)</code></pre>
+<pre><code>## # A tibble: 5 × 3
+##             series_name   mediana     media
+##                  &lt;fctr&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+## 1          The Simpsons 0.1500487 0.1762266
+## 2         Modern Family 0.2293307 0.2421081
+## 3          Black Mirror 0.2276451 0.2529880
+## 4              Homeland 0.2194641 0.2697136
+## 5 How I Met Your Mother 0.2459398 0.2790494</code></pre>
+<p>Porem, se compararmos a tabela acima dos piores indices de r10 com a tabela das piores series (avaliacao geral), e veremos que as duas primeiras series se repetem em ambas as tabelas, mas as outras “piores” series nao aparecem na tabela de menores indices de r10. Portanto, concluimos que eh uma coincidencia, pois ocorreu apenas em 2 casos (The Simpsons e Modern Family).</p>
+</div>
+<div id="primeiro-devemos-destacar-as-series-com-mais-temporadas" class="section level3">
+<h3>2. Primeiro devemos destacar as series com mais temporadas:</h3>
+<pre class="r"><code>maior_qt_temporada &lt;- max(series_from_imdb[,3])
+series_from_imdb %&gt;% 
+  filter(season == maior_qt_temporada) %&gt;% 
+    distinct(series_name) %&gt;% 
+      slice(2:4) #GREYS ANATOMY ESTA COM ERRO PARA O FILTER PELO NOME</code></pre>
+<pre><code>##             series_name
+## 1               Friends
+## 2 How I Met Your Mother
+## 3          The Simpsons</code></pre>
+<p>As series sao Friends, How I met your mother e The Simpsons.</p>
+<pre class="r"><code>the_simp &lt;- series_from_imdb %&gt;% 
+  filter(series_name==&quot;The Simpsons&quot;)
+himym &lt;- series_from_imdb %&gt;% 
+  filter(series_name==&quot;How I Met Your Mother&quot;)
+friends &lt;- series_from_imdb %&gt;% 
+  filter(series_name==&quot;Friends&quot;)
+#greys_anatomy &lt;- series_from_imdb %&gt;% GREYS ANATOMY ESTA COM ERRO PARA O FILTER PELO NOME
+  #filter(series_name==&quot;Grey's Anatomy&quot;)
+
+the_simp%&gt;% 
+  group_by(season) %&gt;% 
+  summarise(media = mean(UserRating), mediana = median(UserRating), desvio=sd(UserRating))</code></pre>
+<pre><code>## # A tibble: 9 × 4
+##   season    media mediana    desvio
+##    &lt;int&gt;    &lt;dbl&gt;   &lt;dbl&gt;     &lt;dbl&gt;
+## 1      1 7.169565     7.2 0.4468568
+## 2      2 6.917890     6.9 0.5797673
+## 3      3 8.158333     8.2 0.3412466
+## 4      4 8.268182     8.2 0.4508050
+## 5      5 8.354545     8.4 0.3750902
+## 6      6 8.332000     8.4 0.6080844
+## 7      7 8.340000     8.3 0.3968627
+## 8      8 8.224000     8.1 0.5340724
+## 9      9 7.876000     7.9 0.6863430</code></pre>
+<pre class="r"><code>himym%&gt;% 
+  group_by(season) %&gt;% 
+  summarise(media = mean(UserRating), mediana = median(UserRating), desvio=sd(UserRating))</code></pre>
+<pre><code>## # A tibble: 9 × 4
+##   season    media mediana    desvio
+##    &lt;int&gt;    &lt;dbl&gt;   &lt;dbl&gt;     &lt;dbl&gt;
+## 1      1 8.400000    8.30 0.3716117
+## 2      2 8.545455    8.50 0.3595331
+## 3      3 8.400000    8.30 0.3986820
+## 4      4 8.370833    8.40 0.3758806
+## 5      5 8.266667    8.20 0.4259686
+## 6      6 8.266667    8.25 0.3829708
+## 7      7 8.233333    8.20 0.4678040
+## 8      8 7.987500    7.90 0.5252846
+## 9      9 7.662500    7.80 0.9545372</code></pre>
+<pre class="r"><code>friends%&gt;% 
+  group_by(season) %&gt;% 
+  summarise(media = mean(UserRating), mediana = median(UserRating), desvio=sd(UserRating))</code></pre>
+<pre><code>## # A tibble: 9 × 4
+##   season    media mediana    desvio
+##    &lt;int&gt;    &lt;dbl&gt;   &lt;dbl&gt;     &lt;dbl&gt;
+## 1      1 8.550000    8.45 0.3624106
+## 2      2 8.520833    8.45 0.3296628
+## 3      3 8.496000    8.40 0.3246537
+## 4      4 8.575000    8.60 0.4285973
+## 5      5 8.700000    8.60 0.3867366
+## 6      6 8.584000    8.60 0.3681938
+## 7      7 8.516667    8.50 0.3073967
+## 8      8 8.533333    8.45 0.4028881
+## 9      9 8.387500    8.40 0.2592841</code></pre>
+<p>Em The Simpsons a melhor temporada eh a quinta com media 8.35 e mediana em 8.4; Em How I Met Your Mother a melhor temporada eh a segunda com media 8.55 e mediana em 8.5; Em Friends a melhor temporada eh a quinta com media 8.7 e mediana em 8.6.</p>
+<pre class="r"><code>the_simp %&gt;% 
+  summarise(media = mean(UserRating), mediana = median(UserRating), desvio=sd(UserRating))</code></pre>
+<pre><code>##      media mediana    desvio
+## 1 7.366721     7.2 0.7418366</code></pre>
+<pre class="r"><code>himym %&gt;% 
+  summarise(media = mean(UserRating), mediana = median(UserRating), desvio=sd(UserRating))</code></pre>
+<pre><code>##      media mediana    desvio
+## 1 8.229327     8.3 0.5597235</code></pre>
+<pre class="r"><code>friends %&gt;% 
+  summarise(media = mean(UserRating), mediana = median(UserRating), desvio=sd(UserRating))</code></pre>
+<pre><code>##      media mediana   desvio
+## 1 8.541102     8.5 0.357957</code></pre>
+<p>Acima valor esperado, mediana e desvio padrao de cada serie (avaliacao geral). Para The Simpsons vemos que a media da serie foi 7.37, quando a melhor temporada ficou com 8.35, resultando numa variacao de 0.98, quase 1 ponto de variacao. Para How I Met Your Mother, a media geral eh de 8.22 e da melhor temporada eh de 8.55, 0.33 de diferenca. Para Friends, a media geral da serie foi de 8.54 ja da melhor temporada foi de 8.7, diferenca de 0.16.</p>
+<p>Falando ainda dos resultados acima, calculamos propositalmente o desvio padrao. Esse valor indica o grau de variação de um conjunto de dados, medidos a partir do valor esperado. Observamos que as temporadas que mais se destacam do restante da serie tem um valor alto de desvio padrao. Esse valor (desvio padrao) esta indica a variacao de valores entre temporadas das series.</p>
+<div id="comparando-os-desvios-padroes-e-confirmando-a-afirmacao-anterior" class="section level4">
+<h4>Comparando os desvios padrões e confirmando a afirmacao anterior:</h4>
+<p>The Simpsons com uma alta taxa desvio padrao (DP) 0.74 teve uma variacao de 0.98 nas avaliacoes da temporada com a avaliacao geral. How I Met Your Mother com uma taxa regular de DP 0.56 teve uma variacao de 0.33 nas avaliacoes da temporada com a avaliacao geral. Friends com uma taxa baixa de DP 0.36 teve uma variacao de 0.16 nas avaliacoes da temporada com a avaliacao geral.</p>
+</div>
+</div>
+</div>
+<div id="conclusoes" class="section level1">
+<h1>Conclusoes</h1>
+<p>Vimos que nem a ausencia de indice r10 nem o alto indice em r1 vao definir a serie pior avaliada. Mas que esses dois fatores apontam algumas das series com piores avaliacoes. Observamos também que uma temporada de uma serie que se destaca do restante da serie, sofre uma grande variacao de notas, as que menos tem diferenca de nota (entre temporada melhor avaliada e a serie) possui uma regularidade de avaliacao maior.</p>
 </div>
 
 

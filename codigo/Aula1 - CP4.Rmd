@@ -11,6 +11,11 @@ library("tidyr")
 library("readr")
 ```
 
+##Sobre os dados utilizados:
+Os dados utilizados nessa analise sao sobre avaliacoes de series no IMDB. Entre as variaveis encontramos os nomes das diferentes series analisadas, nota geral de cada episodio, numero da temporada, numero do episodio de cada temporada, numero do episodio da serie, e as distribuicoes de notas que variam no intervalo r1~r10 onde r1 é a pior avaliacao recebida, e logicamente, r10 a melhor avaliacao.
+
+Nessa analise estudaremos 4 questionamentos cujas respostas podem ser extraidas desses dados.
+
 ##Pergunta 1: Series com grande quantidade de indice r1 eh uma serie mal avaliada?
 
 ####Resposta:
@@ -110,7 +115,7 @@ Comparando a temporada mais bem avaliada (segunda temporada) com a avaliacao ger
 
 ###1. Na primeira pergunta vimos que o alto indice de r1 nao foi um fator decisivo para a serie pior avaliada, mas que a colocou entre as piores series. A ausencia (menor indice) em r10 seria decisivo para a pior série? Por que?
 
-###2. Com a segunda pergunta, observamos que uma temporada melhor avaliada, nao teve uma diferenca gritante comparada a avaliacao geral da serie, esse fator eh mais dificil de ser observado em series com mais temporadas?
+###2. Com a segunda pergunta, observamos que uma temporada melhor avaliada nao teve uma diferenca gritante comparada a avaliacao geral da serie, esse fator eh mais dificil de ser observado em series com mais temporadas (mais temporadas indica uma grande regularidade da serie)?
 
 ##Respostas:
 ###1. Primeiro devemos verificar qual serie tem menor indice r10:
@@ -200,5 +205,6 @@ The Simpsons com uma alta taxa desvio padrao (DP) 0.74 teve uma variacao de 0.98
 How I Met Your Mother com uma taxa regular de DP 0.56 teve uma variacao de 0.33 nas avaliacoes da temporada com a avaliacao geral.
 Friends com uma taxa baixa de DP 0.36 teve uma variacao de 0.16 nas avaliacoes da temporada com a avaliacao geral.
 
-
-
+#Conclusoes
+Vimos que nem a ausencia de indice r10 nem o alto indice em r1 vao definir a serie pior avaliada. Mas que esses dois fatores apontam algumas das series com piores avaliacoes.
+Observamos também que uma temporada de uma serie que se destaca do restante da serie, sofre uma grande variacao de notas, as que menos tem diferenca de nota (entre temporada melhor avaliada e a serie) possui uma regularidade de avaliacao maior.
