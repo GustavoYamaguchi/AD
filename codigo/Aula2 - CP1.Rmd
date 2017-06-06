@@ -3,19 +3,18 @@ title: "Aula 2 - CP1"
 output: html_notebook
 ---
 
-```{r, message=FALSE, warning=FALSE}
-library("ggplot2")
-library("highcharter")
+```{r, echo=FALSE, message=FALSE, error=FALSE, fig.align="center", warning=FALSE}
+require("ggplot2")
 library("dplyr")
 library("tidyr")
 library("readr")
-library("plotly")
+require("plotly")
 series_from_imdb <- read.csv("../dados/series_from_imdb.csv")
 ```
 
+###Nessa analise, queremos determinar se a as notas r1(pior avaliacao) eh um fator determinante na nota final do episodio.
 
-
-```{r, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, error=FALSE, fig.align="center", warning=FALSE}
 the_100 <- series_from_imdb %>% 
   filter(series_name=="The 100")
 
@@ -30,15 +29,7 @@ the_100 %>%
         colors = c("blue","yellow","red")) %>% 
   layout(title="Titulo",
          xaxis= list(title = "Episodio da serie"),
-         yaxis= list(title = "Pontuacao IMDB")) #%>%  
-    #add_trace(y = ~r1 * 10,
-    #          name = 'Haters',
-    #          hoverinfo = "(Serie, Taxa R1)",
-#              line = list(color = 'purple',
- #                         width = 3)) %>%
-  #  add_trace(y = ~r10 * 10,
-   #           name = 'Lovers', 
-    #          line = list(color = 'darkorange',
-     #                     width = 3))
+         yaxis= list(title = "Pontuacao IMDB"))
 ```
 
+No grafico acima, vemos que a taxa de notas r1 estão em cores vermelhas, e que isso esta diretamente relacionado as notas mais baixas que os episodios alcancaram. Ja as notas mais altas, de forma oposta, recebem cores azuladas, significando uma baixa taxa de haters pra aquele episodio. Notas que nao estao entre as mais altas, nem as mais baixas, recebe uma cor amarelo, indicando uma taxa razoavel de haters. Contudo, vemos que as notas de r1 influenciam diretamente na nota final que cada episodio recebe, de forma inversamente proporcional.
