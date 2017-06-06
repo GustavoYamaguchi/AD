@@ -1,0 +1,44 @@
+---
+title: "Aula 2 - CP1"
+output: html_notebook
+---
+
+```{r, message=FALSE, warning=FALSE}
+library("ggplot2")
+library("highcharter")
+library("dplyr")
+library("tidyr")
+library("readr")
+library("plotly")
+series_from_imdb <- read.csv("../dados/series_from_imdb.csv")
+```
+
+
+
+```{r, message=FALSE, warning=FALSE}
+the_100 <- series_from_imdb %>% 
+  filter(series_name=="The 100")
+
+the_100 %>% 
+  plot_ly(x = ~series_ep,
+        y = ~UserRating,
+        name = "The 100",
+        type = "scatter",
+        mode="lines+markers",
+        text= ~paste('Votos r10:', format(round(r10, 3), nsmall = 3)),
+        color= ~r1,
+        colors = c("blue","yellow","red")) %>% 
+  layout(title="Titulo",
+         xaxis= list(title = "Episodio da serie"),
+         yaxis= list(title = "Pontuacao IMDB")) #%>%  
+    #add_trace(y = ~r1 * 10,
+    #          name = 'Haters',
+    #          hoverinfo = "(Serie, Taxa R1)",
+#              line = list(color = 'purple',
+ #                         width = 3)) %>%
+  #  add_trace(y = ~r10 * 10,
+   #           name = 'Lovers', 
+    #          line = list(color = 'darkorange',
+     #                     width = 3))
+```
+
