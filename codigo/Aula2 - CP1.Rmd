@@ -27,7 +27,7 @@ the_100 %>%
         text= ~paste('Votos r10:', format(round(r10, 3), nsmall = 3)),
         color= ~r1,
         colors = c("blue","yellow","red")) %>% 
-  layout(title="Titulo",
+  layout(title="Analise grafica",
          xaxis= list(title = "Episodio da serie"),
          yaxis= list(title = "Pontuacao IMDB"))
 ```
