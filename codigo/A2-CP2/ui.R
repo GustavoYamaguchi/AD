@@ -18,14 +18,15 @@ shinyUI(fluidPage(
   # number of observations to view
   sidebarLayout(
     sidebarPanel(
-      selectInput("choices", "Escolha a serie que gostaria de analisar:", multiple=TRUE,
-                  choices = c("Breaking Bad", "Dexter"))
+      selectInput("nomeDaSerie", "Escolha a serie que gostaria de analisar:", multiple=TRUE,
+                #  choices = "output$series_name")
+      c("Breaking Bad", "Dexter"))
     ),
     
     # Show a summary of the dataset and an HTML table with the 
     # requested number of observations
     mainPanel(
-      plotOutput("newPlot")
+      plotlyOutput("newPlot")
     )
   )
 ))
