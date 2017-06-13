@@ -8,19 +8,25 @@
 #
 
 library(shiny)
+library("plotly")
 
 shinyUI(fluidPage(
   
   # Application title
-  titlePanel("Shiny Text"),
+  titlePanel("Filtros disponiveis"),
   
   # Sidebar with controls to select a dataset and specify the
   # number of observations to view
   sidebarLayout(
     sidebarPanel(
       selectInput("nomeDaSerie", "Escolha a serie que gostaria de analisar:", multiple=TRUE,
-                #  choices = "output$series_name")
-      c("Breaking Bad", "Dexter"))
+        selected = "Breaking Bad",
+        c("Breaking Bad", "Dexter","13 Reasons Why","The 100",
+          "The Simpsons", "Flash", "Friends", "Game of Thrones", 
+          "Arrow", "Suits")),
+      selectInput("analise", "Escolha o que voce gostaria de analisar:",
+                  selected = "r1",
+                  c("r1","r10","UserRating","UserVotes"))
     ),
     
     # Show a summary of the dataset and an HTML table with the 
