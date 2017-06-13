@@ -18,11 +18,6 @@ series_from_imdb <- read.csv("./series_from_imdb.csv")
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
   
-  the_100 <- series_from_imdb %>% 
-    filter(series_name=="The 100")
-  
-  #output$series_name <- unique(c(as.character(series_from_imdb$series_name)))
-  
   output$newPlot <- renderPlotly({
     series_filtro <- c()
     i <- 1
@@ -42,12 +37,10 @@ shinyServer(function(input, output) {
     }
     plot_ly(data = series_from_imdb %>% filter(series_name%in%series_filtro), 
             x = ~ series_ep, 
-            y = ~ get(input$analise), 
-            name = "temporada",
+            y = ~ get(input$analise),
             mode = "lines+markers",
             color = ~as.character(series_name), 
-            text = ~series_name,
-            hoverinfo = "text") %>% 
+            text = ~series_name) %>% 
       layout(title="Analise grafica",
              xaxis= list(title = "Episodio da serie"),
              yaxis= list(title = nome_analise))
