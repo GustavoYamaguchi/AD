@@ -1,0 +1,85 @@
+---
+title: "P3-CP1"
+output: html_document
+---
+
+```{r setup, include=FALSE, echo = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE} 
+library(tidyverse, warn.conflicts = F)
+library(rvest)
+library(plotly)
+library(cluster)
+library(tibble)
+library(ggdendro)
+theme_set(theme_light())
+```
+
+```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE}
+from_page <- read_html("https://www.rottentomatoes.com/celebrity/emma_watson/") %>% 
+    html_node("#filmographyTbl") %>% # A sintaxe da expressão é de um seletor à lá JQuery: https://rdrr.io/cran/rvest/man/html_nodes.html 
+    html_table(fill=TRUE) %>% # Faz parse
+    as.tibble()
+
+filmes = from_page %>% 
+    filter(RATING != "No Score Yet", 
+           `BOX OFFICE` != "—", 
+           CREDIT != "Executive Producer") %>%
+    mutate(RATING = as.numeric(gsub("%", "", RATING)), 
+           `BOX OFFICE` = as.numeric(gsub("[$|M]", "", `BOX OFFICE`))) %>% 
+    filter(`BOX OFFICE` >= 1) # Tem dois filmes que não parecem ter sido lançados no mundo todo
+```
+
+
+#Distribuicao ao longo do tempo
+```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE}
+filmes %>% 
+    ggplot(aes(x = "Filmes", y = YEAR)) + 
+    geom_jitter(width = .02, height = 0, size = 2, alpha = .6) 
+
+filmes %>% 
+    ggplot(aes(x = `YEAR`)) + 
+    geom_histogram(bins = 17) + 
+    geom_rug()
+```
+
+
+#Distribuicao por pontuacao recebida
+```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE}
+filmes %>% 
+    ggplot(aes(x = "Filmes", y = RATING)) + 
+    geom_jitter(width = .01, height = 0, size = 2, alpha = .6)
+
+filmes %>% 
+    ggplot(aes(x = RATING)) + 
+    geom_histogram(bins = 16) + 
+    geom_rug()
+```
+
+#Distribuicao por renda
+```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE}
+filmes %>% 
+    ggplot(aes(x = "Filmes", y = `BOX OFFICE`)) + 
+    geom_jitter(width = .02, height = 0, size = 2, alpha = .6)  
+    
+filmes %>% 
+    ggplot(aes(x = "Filmes", y = `BOX OFFICE`)) + 
+    geom_jitter(width = .02, height = 0, size = 2, alpha = .6) + 
+    scale_y_log10()
+
+filmes %>% 
+    ggplot(aes(x = `BOX OFFICE`)) + 
+    geom_histogram(bins = 15) + 
+    geom_rug()
+
+filmes %>% 
+    ggplot(aes(x = `BOX OFFICE`)) + 
+    geom_histogram(bins = 15) + 
+    scale_x_log10() + 
+    geom_rug()
+```
+
+
+
