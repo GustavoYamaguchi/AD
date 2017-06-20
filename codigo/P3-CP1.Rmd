@@ -15,6 +15,7 @@ library(cluster)
 library(tibble)
 library(ggdendro)
 theme_set(theme_light())
+source("plota_solucoes_hclust.R")
 ```
 
 ```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE}
@@ -33,53 +34,22 @@ filmes = from_page %>%
 ```
 
 
-#Distribuicao ao longo do tempo
-```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE}
-filmes %>% 
-    ggplot(aes(x = "Filmes", y = YEAR)) + 
-    geom_jitter(width = .02, height = 0, size = 2, alpha = .6) 
 
-filmes %>% 
-    ggplot(aes(x = `YEAR`)) + 
-    geom_histogram(bins = 17) + 
-    geom_rug()
+```{r}
+agrupamento_h_2d = filmes %>% 
+    column_to_rownames("TITLE") %>%
+    select(RATING, `BOX OFFICE`) %>%
+    dist(method = "euclidean") %>% 
+    hclust(method = "centroid")
+
+ggdendrogram(agrupamento_h_2d, rotate = TRUE)
+
+data.frame(k = NROW(agrupamento_h_2d$height):1, 
+           height = agrupamento_h_2d$height) %>% 
+    ggplot(aes(x = k, y = height)) + 
+    geom_line(colour = "grey") + 
+    geom_point() + 
+    labs(x = "Número de clusters produzido", y = "Dissimilaridade na junção")
+
 ```
-
-
-#Distribuicao por pontuacao recebida
-```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE}
-filmes %>% 
-    ggplot(aes(x = "Filmes", y = RATING)) + 
-    geom_jitter(width = .01, height = 0, size = 2, alpha = .6)
-
-filmes %>% 
-    ggplot(aes(x = RATING)) + 
-    geom_histogram(bins = 16) + 
-    geom_rug()
-```
-
-#Distribuicao por renda
-```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE}
-filmes %>% 
-    ggplot(aes(x = "Filmes", y = `BOX OFFICE`)) + 
-    geom_jitter(width = .02, height = 0, size = 2, alpha = .6)  
-    
-filmes %>% 
-    ggplot(aes(x = "Filmes", y = `BOX OFFICE`)) + 
-    geom_jitter(width = .02, height = 0, size = 2, alpha = .6) + 
-    scale_y_log10()
-
-filmes %>% 
-    ggplot(aes(x = `BOX OFFICE`)) + 
-    geom_histogram(bins = 15) + 
-    geom_rug()
-
-filmes %>% 
-    ggplot(aes(x = `BOX OFFICE`)) + 
-    geom_histogram(bins = 15) + 
-    scale_x_log10() + 
-    geom_rug()
-```
-
-
 
