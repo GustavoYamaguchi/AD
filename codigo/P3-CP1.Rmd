@@ -3,6 +3,8 @@ title: "P3-CP1"
 output: html_document
 ---
 
+#Analise de grupos de filmes da Emma Watson
+
 ```{r setup, include=FALSE, echo = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -20,22 +22,29 @@ source("plota_solucoes_hclust.R")
 
 ```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE}
 from_page <- read_html("https://www.rottentomatoes.com/celebrity/emma_watson/") %>% 
-    html_node("#filmographyTbl") %>% # A sintaxe da expressão é de um seletor à lá JQuery: https://rdrr.io/cran/rvest/man/html_nodes.html 
-    html_table(fill=TRUE) %>% # Faz parse
+    html_node("#filmographyTbl") %>%
+    html_table(fill=TRUE) %>%
     as.tibble()
 
 filmes = from_page %>% 
     filter(RATING != "No Score Yet", 
-           `BOX OFFICE` != "—", 
+           `BOX OFFICE` != "-", 
            CREDIT != "Executive Producer") %>%
     mutate(RATING = as.numeric(gsub("%", "", RATING)), 
            `BOX OFFICE` = as.numeric(gsub("[$|M]", "", `BOX OFFICE`))) %>% 
-    filter(`BOX OFFICE` >= 1) # Tem dois filmes que não parecem ter sido lançados no mundo todo
+    filter(`BOX OFFICE` >= 1)
 ```
 
+##Os dados
+Como j� foi mencionado acima, vamos analisar filmes da Emma Watson, vamos tentar descobrir grupos e nomea-los de forma que sejam descrito por esses nomes, e nos preocuparemos tambem em ecnontrar uma quantidade razoavel de grupos para que nao sejam perdidos dados (por exenplo, selecionar apenas 1 grupo de todos os filmes da Emma Watson e nomea-lo) e tambem nao podemos ter uma grande quantidade de grupos (aqui seria o inverso do caso anterior, muitos grupos gera muita informacao e muita informacao junta dificulta a intuicao sobre os grupos).  
+Dados que utilizaremos do dataset:  
+1. BOX OFFICE: receita do filme  
+2. RATING: nota recebida pelo filme  
+3. YEAR: ano de lancamento do filme  
 
+#Analise do dendograma
 
-```{r}
+```{r, message=FALSE, error=FALSE, warning=FALSE}
 agrupamento_h_2d = filmes %>% 
     column_to_rownames("TITLE") %>%
     select(RATING, `BOX OFFICE`) %>%
@@ -44,12 +53,44 @@ agrupamento_h_2d = filmes %>%
 
 ggdendrogram(agrupamento_h_2d, rotate = TRUE)
 
+```
+
+Vemos acima uma grande dissimilaridade quando o algoritmos muda de 3 para 2 grupos, indicando 3 como uma quantidade razoavel de grupos para representar os filmes da Emma Watson.
+
+## Analise de grafico de linha
+```{r, message=FALSE, error=FALSE, warning=FALSE}
 data.frame(k = NROW(agrupamento_h_2d$height):1, 
            height = agrupamento_h_2d$height) %>% 
     ggplot(aes(x = k, y = height)) + 
     geom_line(colour = "grey") + 
     geom_point() + 
-    labs(x = "Número de clusters produzido", y = "Dissimilaridade na junção")
+    labs(x = "Numero de clusters produzido", y = "Dissimilaridade na juncao")
+```
+
+Nesse grafico podemos confirmar a afirmacao anterior, a dissimilaridade tenta a aumentar rapidamente quando o numero de clusters eh inferior a 3.  
+
+## Escala decima eh boa?
+```{r, message=FALSE, error=FALSE, warning=FALSE}
+plota_hclusts_2d(agrupamento_h_2d, 
+                 filmes, 
+                 c("RATING", "`BOX OFFICE`"), 
+                 linkage_method = "centroid", ks = 1:6)
 
 ```
 
+Continuando a procurar pela quantidade de clusters ideal, vemos uma divisao para de 1 a 6 grupos, e percebemos que o de 3 grupos nos da impressao de uma boa divisao, visto que a escala de receita � bem maior que a de rating(nota). Entre os 3 grupos, podemos dividir em "Sucesso de bilheteria", "Filmes com uma boa bilheteria" e "Fracassos de bilheteria". Por�m, estamos a analisar 2 vari�veis e esses grupos nos deram apenas grupos que se dividem por bilheteria, esse nao seria o ideal, vamos tentar dividir melhor esses grupos a seguir:
+
+```{r, message=FALSE, error=FALSE, warning=FALSE}
+filmes2 = filmes %>% mutate(`BOX OFFICE` = log10(`BOX OFFICE`))
+plota_hclusts_2d(agrupamento_h_2d, 
+                 filmes2, 
+                 c("RATING", "`BOX OFFICE`"), 
+                 linkage_method = "ward.D", ks = 3) + scale_y_log10()
+```
+
+## Grupos selecionados:
+O grafico de pontos acima, nos mostra 3 grupos, por motivos j� discutidos anteriormente. A estrategia por tras dessa visualizacao eh a mudanca de escala na receita, agora utilizamos uma escala logaritmica, onde podemos analisar melhor a variavel notas do eixo X. Assim, percebemos 3 grupos diferentes dos mencionados anteriormente: "Blockbusters" (Os grandes sucessos de bilheteria e de avaliacoes), "Os mais ou menos" (Os filmes com bilheterias razoaveis e notas de razoaveis a boas) e "Decepcao" (um unico filme com pouca bilheteria e notas baixissimas).  
+
+## Explicacao de grupos:
+
+Os flimes que ja assisti estao no grupo de blockbusters: "Beauty and the Beast" e todos os "Harry Potter", realmente foram filmes diferencias e se encaixam no grupo, os outros filmes nao assisti, talvez um bom indicativo para os grupos que estao.
