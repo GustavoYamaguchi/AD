@@ -1,0 +1,31 @@
+---
+title: "P3-CP2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE} 
+library(dplyr)
+```
+
+
+```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE} 
+filmes <- read.csv("../dados/meta_data7.csv")
+  
+filme_personagem <- read.csv("../dados/character_mapping.csv")
+  
+personagens <- read.csv("../dados/character_list5.csv")
+
+tabela_completa <- left_join(filmes, personagens, "script_id")
+```
+
+```{r}
+filme_agrupado <- tabela_completa %>% 
+  filter(age != 'NULL') %>%
+  mutate(age = as.integer(age)) %>% 
+  group_by(title) %>%  summarise(media_idade = mean(age, na.rm = TRUE))
+```
+
