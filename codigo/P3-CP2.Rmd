@@ -9,6 +9,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE} 
 library(dplyr)
+library(ggfortify)
+library(cluster)
+library(ggdendro)
+library(broom)
 ```
 
 
@@ -24,8 +28,18 @@ tabela_completa <- left_join(filmes, personagens, "script_id")
 
 ```{r}
 filme_agrupado <- tabela_completa %>% 
-  filter(age != 'NULL') %>%
+  filter(age != 'NULL', !is.na(age), !is.na(year), !is.na(words), !is.na(gross)) %>%
   mutate(age = as.integer(age)) %>% 
-  group_by(title) %>%  summarise(media_idade = mean(age, na.rm = TRUE))
+  group_by(title) %>%  
+  summarise(media_idade = mean(age, na.rm = TRUE), ano_lancamento = first(year), 
+            media_palavras = mean(words), media_renda = mean(gross))
+```
+
+```{r}
+km = filme_agrupado %>% 
+  select(-title) %>% 
+  kmeans(centers = 4, nstart = 20)
+
+
 ```
 
