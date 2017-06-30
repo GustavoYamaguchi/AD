@@ -13,6 +13,9 @@ library(ggfortify)
 library(cluster)
 library(ggdendro)
 library(broom)
+library(plotly)
+library(tidyr)
+library(GGally)
 ```
 
 
@@ -32,14 +35,78 @@ filme_agrupado <- tabela_completa %>%
   mutate(age = as.integer(age)) %>% 
   group_by(title) %>%  
   summarise(media_idade = mean(age, na.rm = TRUE), ano_lancamento = first(year), 
-            media_palavras = mean(words), media_renda = mean(gross))
+            media_palavras = mean(words), media_renda = mean(gross)) %>% 
+  filter(media_renda > 1.5)
 ```
+
+#Normalizacao
+alteramos para escala de log para normalizar e ajudar na visualizacao dos dados
 
 ```{r}
-km = filme_agrupado %>% 
-  select(-title) %>% 
-  kmeans(centers = 4, nstart = 20)
+filme_agrupado2 <- filme_agrupado %>% 
+    mutate_each(funs(log), 2:5)
+
+filme_agrupado2 %>% 
+    select(-title) %>% 
+    ggpairs()
+
+summary(select(filme_agrupado2, -title))
+
+filme_agrupado2.scaled = filme_agrupado2 %>% 
+  mutate_each(funs(as.vector(scale(.))), 2:5)
+summary(filme_agrupado2.scaled)
+
+filme_agrupado2.scaled %>% 
+    select(-title) %>% 
+    ggpairs()
+```
+
+
+```{r}
+set.seed(123)
+explorando_k = tibble(k = 1:15) %>% 
+    group_by(k) %>% 
+    do(
+        kmeans(select(filme_agrupado, -title), 
+               centers = .$k, 
+               nstart = 20) %>% glance()
+    )
+explorando_k %>% 
+    ggplot(aes(x = k, y = betweenss / totss)) + 
+    geom_line() + 
+    scale_x_continuous(limits=c(0, 15)) +
+    geom_point()
+```
+
+Calculamos um K para saber o numero de clusters para o nosso problema
+
+Vemos que 4 é um bom numero pois a partir desse numero o ganho passa a ser minimo e nao vale a pena aumentar o numero de clusters
+
+```{r}
+n_clusters = 4
+
+km = filme_agrupado2.scaled %>% 
+    select(-title) %>% 
+    kmeans(centers = n_clusters, nstart = 20)
+
+filme_agrupado2.scaled.km.long = km %>% 
+    augment(filme_agrupado2.scaled) %>%
+  
+    gather(key = "variável", 
+           value = "valor", 
+           -title, -.cluster)
+
+filme_agrupado2.scaled.km.long %>% 
+    ggplot(aes(x = `variável`, y = valor, group = title, colour = .cluster)) + 
+    #geom_point(alpha = 0.2) + 
+    geom_line(alpha = .5) + 
+    facet_wrap(~ .cluster) 
 
 
 ```
+
+Grupo 1: Grupo regular que mantem uma linha praticamente reta 
+Grupo 2: sao filmes antigos e com uma media de palavras mais baixa que os outros grupos 
+Grupo 3: filmes com uma media mais baixa de renda e  com media de idade bem dividida 
+Grupo 4: sao atores mais novos e que teve o no de lançamento mais recente 
 
