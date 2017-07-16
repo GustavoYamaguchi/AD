@@ -1,0 +1,79 @@
+---
+title: "P3-CP3"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, echo=FALSE, error=FALSE}
+library(tidyverse) 
+library(broom) # facilita lidar com modelos como data frames
+library(ggfortify, quietly = TRUE) # plots para modelos
+require(GGally, quietly = TRUE)
+library(knitr, quietly = TRUE)
+library(cluster)
+theme_set(theme_bw())
+```
+
+```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE} 
+filmes <- read.csv("../dados/meta_data7.csv")
+  
+filme_personagem <- read.csv("../dados/character_mapping.csv")
+  
+personagens <- read.csv("../dados/character_list5.csv")
+
+tabela_completa <- left_join(filmes, personagens, "script_id")
+```
+
+```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE} 
+filme_agrupado <- tabela_completa %>% 
+  filter(age != 'NULL', !is.na(age), !is.na(year), !is.na(words), !is.na(gross)) %>%
+  mutate(age = as.integer(age)) %>% 
+  group_by(title) %>%  
+  summarise(media_idade = mean(age, na.rm = TRUE), ano_lancamento = first(year), 
+            media_palavras = mean(words), media_renda = mean(gross)) %>% 
+  filter(media_renda > 1.5)
+```
+
+```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE}
+filme_agrupado2 <- filme_agrupado %>% 
+    mutate_each(funs(log), 2:5)
+
+filme_agrupado2.scaled = filme_agrupado2 %>% 
+  mutate_each(funs(as.vector(scale(.))), 2:5)
+```
+
+```{r}
+pr.out <- prcomp(select(filme_agrupado2.scaled, -title), scale=TRUE)
+autoplot(pr.out, data = filme_agrupado2.scaled, size = 2,  
+         loadings = FALSE)
+```
+
+```{r}
+tidy(pr.out, "variables") %>% 
+    filter(PC <= 2) %>% 
+    spread(column, value)
+```
+
+
+```{r}
+autoplot(pr.out, data = filme_agrupado2.scaled, size = 2, 
+         colour = "grey",
+         loadings = TRUE, loadings.colour = 'blue',
+         loadings.label = TRUE, 
+         loadings.label.size = 3)
+```
+
+```{r}
+tidy(pr.out, "pcs") %>% 
+    ggplot(aes(x = PC, y = cumulative)) + 
+    geom_line() + 
+    geom_point() + 
+    labs(x = "Componentes principais usados", 
+         y = "Prop. cumulativa da variância original \n
+              que esses PCs representam.")
+```
+
