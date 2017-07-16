@@ -46,11 +46,19 @@ filme_agrupado2.scaled = filme_agrupado2 %>%
   mutate_each(funs(as.vector(scale(.))), 2:5)
 ```
 
+#Explicando os dados
+
+#Contextualizacao
+
 ```{r}
 pr.out <- prcomp(select(filme_agrupado2.scaled, -title), scale=TRUE)
 autoplot(pr.out, data = filme_agrupado2.scaled, size = 2,  
          loadings = FALSE)
 ```
+
+#Resultados
+
+##Analise do grafica anterior
 
 ```{r}
 tidy(pr.out, "variables") %>% 
@@ -58,6 +66,7 @@ tidy(pr.out, "variables") %>%
     spread(column, value)
 ```
 
+##Explicacao dos pcs
 
 ```{r}
 autoplot(pr.out, data = filme_agrupado2.scaled, size = 2, 
@@ -66,6 +75,8 @@ autoplot(pr.out, data = filme_agrupado2.scaled, size = 2,
          loadings.label = TRUE, 
          loadings.label.size = 3)
 ```
+
+##Explicacao da relacao das variaveis com os pcs
 
 ```{r}
 tidy(pr.out, "pcs") %>% 
@@ -77,3 +88,4 @@ tidy(pr.out, "pcs") %>%
               que esses PCs representam.")
 ```
 
+##Explicar variancia cumulativa pela quantidade de componentes
