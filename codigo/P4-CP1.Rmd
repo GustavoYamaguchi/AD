@@ -1,0 +1,52 @@
+---
+title: "P4-CP1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE} 
+library(dplyr) 
+library(plotly)
+library(ggplot2)
+library(tidyr)
+library(readr)
+library(lubridate)
+
+dados_github <- read.csv("../dados/github-users-committing-filetypes.csv")
+```
+
+```{r}
+java_repos <- dados_github %>% 
+  filter(file_extension == 'java') %>% 
+    mutate(week_day = wday(ymd(paste(the_year, formatC(the_month, width=2, flag="0"), formatC(month_day, width=2, flag="0")))))
+
+cpp_repos <- dados_github %>% 
+  filter(file_extension == 'cpp') %>% 
+    mutate(week_day = wday(ymd(paste(the_year, formatC(the_month, width=2, flag="0"), formatC(month_day, width=2, flag="0")))))
+```
+
+#Os dados
+
+```{r}
+cpp_repos_wkend <- cpp_repos %>% 
+  filter(week_day == 1 | week_day == 7)
+  
+cpp_repos_wkday <- cpp_repos %>% 
+  filter(week_day > 1 & week_day < 7)
+
+java_repos_wkend <- java_repos %>% 
+  filter(week_day == 1 | week_day == 7)
+
+java_repos_wkday <- java_repos %>% 
+  filter(week_day > 1 & week_day < 7)
+```
+
+
+```{r}
+
+
+```
+
