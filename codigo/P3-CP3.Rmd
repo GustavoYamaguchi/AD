@@ -1,0 +1,98 @@
+---
+title: "P3-CP3"
+output: html_document
+---
+
+```{r setup, include=FALSE, warning=FALSE, error=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, echo=FALSE, error=FALSE, warning=FALSE, message=FALSE}
+library(tidyverse) 
+library(broom) # facilita lidar com modelos como data frames
+library(ggfortify, quietly = TRUE) # plots para modelos
+require(GGally, quietly = TRUE)
+library(knitr, quietly = TRUE)
+library(cluster)
+theme_set(theme_bw())
+```
+
+```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE} 
+filmes <- read.csv("../dados/meta_data7.csv")
+  
+filme_personagem <- read.csv("../dados/character_mapping.csv")
+  
+personagens <- read.csv("../dados/character_list5.csv")
+
+tabela_completa <- left_join(filmes, personagens, "script_id")
+```
+
+```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE} 
+filme_agrupado <- tabela_completa %>% 
+  filter(age != 'NULL', !is.na(age), !is.na(year), !is.na(words), !is.na(gross)) %>%
+  mutate(age = as.integer(age)) %>% 
+  group_by(title) %>%  
+  summarise(media_idade = mean(age, na.rm = TRUE), ano_lancamento = first(year), 
+            media_palavras = mean(words), renda = mean(gross)) %>% 
+  filter(renda > 1.5)
+```
+
+```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE}
+filme_agrupado2 <- filme_agrupado %>% 
+    mutate_each(funs(log), 2:5)
+
+filme_agrupado2.scaled = filme_agrupado2 %>% 
+  mutate_each(funs(as.vector(scale(.))), 2:5)
+```
+
+#Sobre os dados
+
+Nessa atividade estamos utilizando um dataset sobre filmes onde utilizaremos dados como: a media da idade dos atores do filme, o ano de lançamento, a media da quantidade de palavras faladas pelos atores e a renda de cada filme. 
+
+
+#Contextualizacao
+
+Na atividade anterior trabalhamos com normalizacao dos dados, o algoritmo K means que objetiva buscar clusters de grupos, mas o resultado foram muitas variaveis e nessa atividade veremos como diminuir a dimensionalidade através de componentes principais, facilitando a leitura dos dados.
+
+
+#Resultados
+
+```{r}
+pr.out <- prcomp(select(filme_agrupado2.scaled, -title), scale=TRUE)
+tidy(pr.out, "variables") %>% 
+    filter(PC <= 2) %>% 
+    spread(column, value)
+```
+
+##Explicacao dos pcs
+
+Calculando 2 dos componentes principais, vemos que o primeiro tem uma grande conformidade com as variaveis media de palavras e principalmente ano de lancamento, a variavel renda tambem varia com PC1, mas são inversamente proporcional. Enquanto que a variacao do pc1 nao interfere tanto na media de idade dos atores dos filmes.
+
+
+```{r}
+autoplot(pr.out, data = filme_agrupado2.scaled, size = 2, 
+         colour = "grey",
+         loadings = TRUE, loadings.colour = 'blue',
+         loadings.label = TRUE, 
+         loadings.label.size = 3)
+```
+
+##Explicando o grafico anterior
+
+Acima vemos o grafico que poe PC1 e PC2 num plano cartesiano e explica melhor o que foi dito sobre as variaveis e suas variacoes de acordo com os componentes principais.
+
+Em PC1 as variaveis mais influenciadas sao media de palavras, ano de lancamento e a renda dos filmes, a media de idade dos atores interfere minimamente nessa variavel.
+Em PC2 media idade é o que mais varia com esse componente principal, as outras 3 variaveis variam pouco com PC2.
+
+
+```{r}
+autoplot(pr.out, data = filme_agrupado2.scaled, size = 2,  
+         loadings = FALSE)
+```
+
+##Avaliando alguns casos
+
+De acordo com o que foi dito sobre o grafico anterior, podemos avaliar alguns fatos sobre esse grafico.
+Há dois filmes a esquerda separados da nuvem onde se encontra a maioria, se observamos o grafica anterior, vemos que eles tiveram uma alta renda, teve uma media baixa de palavras faladas, foi um filme relativamente antigo e a media de idade dos personagens nao era alta demais nem baixa demais.
+Ha outro filme na parte inferior e a direita no grafico, isso significa que teve um elenco com baixa media de idade, pouca renda, uma media alta de palavras faladas e que nao eh um filme antigo.
