@@ -1,0 +1,89 @@
+---
+title: "P4 - CP3"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE} 
+library(dplyr) 
+library(plotly)
+library(ggplot2)
+library(tidyr)
+library(readr)
+library(lubridate)
+library(resample)
+
+dados_github <- read.csv("../dados/github-users-committing-filetypes.csv")
+```
+
+##1. Dada a amostra dos dados do github, podemos eleger o dia mais produtivo de uma linguagem durante a semana?
+
+```{r}
+java_repos <- dados_github %>% 
+  filter(file_extension == 'java') %>% 
+    mutate(week_day = wday(ymd(paste(the_year, formatC(the_month, width=2, flag="0"), formatC(month_day, width=2, flag="0")))))
+
+java_2 <- java_repos %>% 
+  filter(week_day == 2)
+java_3 <- java_repos %>% 
+  filter(week_day == 3)
+java_4 <- java_repos %>% 
+  filter(week_day == 4)
+java_5 <- java_repos %>% 
+  filter(week_day == 5)
+java_6 <- java_repos %>% 
+  filter(week_day == 6)
+
+#Fazendo boostrap das medianas para popularidade de cada dia.
+
+java_2_bs = bootstrap(java_2,
+                          median(users),
+                          R=5000)
+java_2_bs.interval = java_2_bs %>% 
+  CI.percentile(probs = c(.025, .975))
+java_3_bs = bootstrap(java_3,
+                          median(users),
+                          R=5000)
+java_3_bs.interval = java_3_bs %>% 
+  CI.percentile(probs = c(.025, .975))
+java_4_bs = bootstrap(java_4,
+                          median(users),
+                          R=5000)
+java_4_bs.interval = java_4_bs %>% 
+  CI.percentile(probs = c(.025, .975))
+java_5_bs = bootstrap(java_5,
+                          median(users),
+                          R=5000)
+java_5_bs.interval = java_5_bs %>% 
+  CI.percentile(probs = c(.025, .975))
+java_6_bs = bootstrap(java_6,
+                          median(users),
+                          R=5000)
+java_6_bs.interval = java_6_bs %>% 
+  CI.percentile(probs = c(.025, .975))
+
+
+df = data.frame(rbind(java_2_bs.interval, java_3_bs.interval, java_4_bs.interval, java_5_bs.interval, java_6_bs.interval))
+df$medida = c(2,3,4,5,6)
+df %>% 
+  ggplot(aes(x = medida, ymin = X2.5., ymax = X97.5.)) + 
+  geom_errorbar(width = .2)
+```
+
+
+```{r}
+java_diff_23.SD <- bootstrap2(data = (java_2)$users, 
+               data2 = (java_3)$users,
+               sd)
+
+java_diff_23.SD.CI = CI.percentile(java_diff_23.SD, probs = c(.025, .975))
+
+data.frame(java_diff_23.SD.CI) %>% 
+  ggplot(aes(x = "Diferenca", ymin = X2.5., ymax = X97.5.)) + 
+  geom_errorbar(width = .2)
+```
+
+
