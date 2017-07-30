@@ -13,10 +13,19 @@ library(plotly)
 library(ggplot2)
 library(tidyr)
 library(readr)
+library(tidyverse)
+library(resample)
 library(lubridate)
 
 dados_github <- read.csv("../dados/github-users-committing-filetypes.csv")
 ```
+
+#Os dados
+
+Os dados que vamos trabalhar são uma amostra de atividades (alteracao) de arquivos com uma certa extensao que estao hospedadas no GitHub, para isso, nos é diponibilizado dados como: 
+- A extensao do arquivo;
+- Quantidade de usuarios que modificaram arquivos de determinada extensao e
+- Dia, mes e ano da alteracao. As datas variam de janeiro de 2016 a maio de 2017.
 
 ```{r}
 java_repos <- dados_github %>% 
@@ -28,9 +37,12 @@ cpp_repos <- dados_github %>%
     mutate(week_day = wday(ymd(paste(the_year, formatC(the_month, width=2, flag="0"), formatC(month_day, width=2, flag="0")))))
 ```
 
-#Os dados
+#Alterando os dados disponibilizados
 
-```{r}
+Como os dados disponibilizados nao oferecem o dia da semana e as perguntas sao em cima dessa variavel, foi utilizada uma biblioteca externa (lubridate) para conseguir capturar esse dado. 
+
+
+```{r echo=FALSE, message=FALSE, error=FALSE, warning=FALSE}
 cpp_repos_wkend <- cpp_repos %>% 
   filter(week_day == 1 | week_day == 7)
   
@@ -44,9 +56,113 @@ java_repos_wkday <- java_repos %>%
   filter(week_day > 1 & week_day < 7)
 ```
 
+#Respondendo as perguntas:
 
-```{r}
+##1. Para cada uma delas, há uma diferença significativa na sua popularidade durante a semana e durante o fim de semana? Essa diferença é grande? 
 
+```{r message=FALSE, warning=FALSE}
+#em C++
+cpp_weekday.median = bootstrap(cpp_repos_wkday, 
+                            median(users),
+                            R= 4000)
+cpp_weekday.CI = cpp_weekday.median  %>% 
+  CI.percentile(probs = c(.025, .975))
+
+cpp_wkend.median = bootstrap(cpp_repos_wkend, 
+                            median(users),
+                            R= 4000) 
+cpp_weekend.CI = cpp_wkend.median  %>% 
+  CI.percentile(probs = c(.025, .975))
+
+
+data.frame(rbind(cpp_weekday.CI, cpp_weekend.CI)) %>% 
+   ggplot(aes(x= c("Weekdays", "Weekend"), ymin = X2.5., ymax = X97.5.)) + 
+  geom_errorbar(width = .2) + ggtitle("C++") + theme(plot.title = element_text(hjust = 0.5)) + labs(x="")
 
 ```
 
+O grafico acima mostra que existe uma grande diferença nos intervalos das medianas de repositorios em com 95% de confiança que sofreram alterações em arqivos C++ em dias de semana e final de semana, onde sofreram mais alteracoes em dia de semana, mais a frente verificaremos quão maior é essa diferença.
+
+```{r message=FALSE, warning=FALSE}
+#para Java
+
+java_wkday.median = bootstrap(java_repos_wkday, 
+                            median(users),
+                            R= 4000)
+java_wkday.CI = java_wkday.median  %>% 
+  CI.percentile(probs = c(.025, .975))
+
+java_wkend.median = bootstrap(java_repos_wkend, 
+                            median(users),
+                            R= 4000) 
+java_wkend.CI = java_wkend.median  %>% 
+  CI.percentile(probs = c(.025, .975))
+
+
+data.frame(rbind(java_wkday.CI, java_wkend.CI)) %>% 
+   ggplot(aes(x= c("Weekdays", "Weekend"), ymin = X2.5., ymax = X97.5.)) + 
+  geom_errorbar(width = .2) + ggtitle("Java") + theme(plot.title = element_text(hjust = 0.5)) + labs(x="")
+```
+
+O grafico acima mostra que existe uma grande diferença nos intervalos das medianas de repositorios com 95% de confiança que sofreram alterações em arquivos Java em dias de semana e final de semana, onde sofreram mais alteracoes em dia de semana. 
+
+### Quantificando a diferenca
+
+```{r}
+cpp_repos_wkday <- cpp_repos_wkday %>% 
+  mutate(isWeekend = FALSE)
+cpp_repos_wkend <- cpp_repos_wkend %>% 
+  mutate(isWeekend = TRUE)
+
+cpp_merge = rbind(cpp_repos_wkday, cpp_repos_wkend)
+  
+cpp_diff_median = cpp_merge$users %>% bootstrap2(statistic=median,
+                                         treatment=cpp_merge$isWeekend)
+cpp_diff_CI = CI.percentile(cpp_diff_median, probs=c(.025, .975))
+
+data.frame(cpp_diff_CI) %>% 
+   ggplot(aes(x= "Diferença", ymin = X2.5., ymax = X97.5.)) + 
+   geom_errorbar(width = .2) + ggtitle("C++") + theme(plot.title = element_text(hjust = 0.5)) +
+   geom_hline(yintercept = 0, colour = "darkorange")
+
+```
+
+Agora sim podemos quantificar essa diferença e afimar que, com 95% de confianca, a mediana da popularidade de alteracoes nos arquivos da linguagem C++ é maior nos dias de semana e que essa diferenca está no intervalo [500~582]
+
+```{r}
+java_repos_wkday <- java_repos_wkday %>% 
+  mutate(isWeekend = FALSE)
+java_repos_wkend <- java_repos_wkend %>% 
+  mutate(isWeekend = TRUE)
+
+java_merge = rbind(java_repos_wkday, java_repos_wkend)
+  
+java_diff_median = java_merge$users %>% bootstrap2(statistic=median,
+                                         treatment=java_merge$isWeekend)
+java_diff_CI = CI.percentile(java_diff_median, probs=c(.025, .975))
+
+data.frame(java_diff_CI) %>% 
+   ggplot(aes(x= "Diferença", ymin = X2.5., ymax = X97.5.)) + 
+   geom_errorbar(width = .2) + ggtitle("Java") + theme(plot.title = element_text(hjust = 0.5)) +
+   geom_hline(yintercept = 0, colour = "darkorange")
+```
+
+Para Java a diferenca na mediana da popularidade nos dias de semana e final de semana, também com uma confiança de 95%, podemos afirmar que o intervalo está entre [1391~1562], onde nos dias de semana Java é mais popular que nos finais de semana.
+
+##2. Existe uma diferença significativa entre as duas linguagens na sua variação de popularidade nos finais de semana?
+
+```{r}
+cpp_java.SD <- bootstrap2(data = (java_repos_wkend)$users, 
+               data2 = (cpp_repos_wkend)$users,
+               sd)
+
+cpp_java.SD.CI = CI.percentile(cpp_java.SD, probs = c(.025, .975))
+
+data.frame(cpp_java.SD.CI) %>% 
+  ggplot(aes(x = "Irregularidade: valores positivos para Java, negativos para C++", ymin = X2.5., ymax = X97.5.)) + 
+  geom_errorbar(width = .2)
+
+```
+
+Usando o mesmo processo que os utilizados previamente, porém, calculando a diferença entre os desvios padrão com uma confiança de 95% chegamos a seguinte conclusão: 
+com o intervalo acima conseguimos ver que existe uma diferenca significativa onde Java possui irregularidade muito maior que a de C++ entre alteracoes nos arquivos em dias de semana e final de semana. Com uma confiança de 95% podemos dizer que essa diferença de desvio padrao esta no intervalo [101~189].
