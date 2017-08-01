@@ -75,15 +75,17 @@ df %>%
 
 
 ```{r}
-java_diff_23.SD <- bootstrap2(data = (java_2)$users, 
-               data2 = (java_3)$users,
+java_diff_36.SD <- bootstrap2(data = (java_3)$users, 
+               data2 = (java_6)$users,
                sd)
 
-java_diff_23.SD.CI = CI.percentile(java_diff_23.SD, probs = c(.025, .975))
+java_diff_36.SD.CI = CI.percentile(java_diff_36.SD, probs = c(.025, .975))
 
-data.frame(java_diff_23.SD.CI) %>% 
+data.frame(java_diff_36.SD.CI) %>% 
   ggplot(aes(x = "Diferenca", ymin = X2.5., ymax = X97.5.)) + 
   geom_errorbar(width = .2)
 ```
 
+
+No gráfico acima, vemos o intervalo de diferença entre dois dias da semana: terça e sexta feira, que são os mais diferentes, sendo terça o mais produtivo e sexta o menos, de acordo com o gráfico anterior. Mas ainda assim, ao analisarmos o intervalo calculado pelo desvio padrão, vemos que ele cruza o 0, indicando que nenhuma conclusão pode ser tirada a partir dele.
 
