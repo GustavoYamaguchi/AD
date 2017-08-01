@@ -21,7 +21,7 @@ dados_github <- read.csv("../dados/github-users-committing-filetypes.csv")
 
 ##1. Dada a amostra dos dados do github, podemos eleger o dia mais produtivo de uma linguagem durante a semana?
 
-```{r}
+```{r warning = FALSE}
 java_repos <- dados_github %>% 
   filter(file_extension == 'java') %>% 
     mutate(week_day = wday(ymd(paste(the_year, formatC(the_month, width=2, flag="0"), formatC(month_day, width=2, flag="0")))))
@@ -87,5 +87,48 @@ data.frame(java_diff_36.SD.CI) %>%
 ```
 
 
-No gráfico acima, vemos o intervalo de diferença entre dois dias da semana: terça e sexta feira, que são os mais diferentes, sendo terça o mais produtivo e sexta o menos, de acordo com o gráfico anterior. Mas ainda assim, ao analisarmos o intervalo calculado pelo desvio padrão, vemos que ele cruza o 0, indicando que nenhuma conclusão pode ser tirada a partir dele.
+No grafico acima, vemos o intervalo de diferenca entre dois dias da semana: terca e sexta feira, que sao os mais diferentes, sendo terca o mais produtivo e sexta o menos, de acordo com o grafico anterior. Mas ainda assim, ao analisarmos o intervalo calculado pelo desvio padrao, vemos que ele cruza o 0, indicando que nenhuma conclusao pode ser tirada a partir dele.
+
+### Pergunta derivada: 
+
+1.1) Tendo em vista a produtividade do dia de semana, podemos eleger o dia mais produtivo do fim de semana?
+
+```{r warning=FALSE}
+java_dom <- java_repos %>% 
+  filter(week_day == 1)
+java_sab <- java_repos %>% 
+  filter(week_day == 7)
+
+java_dom_bs = bootstrap(java_dom,
+                          median(users),
+                          R=5000)
+java_dom_bs.interval = java_dom_bs %>% 
+  CI.percentile(probs = c(.025, .975))
+java_sab_bs = bootstrap(java_sab,
+                          median(users),
+                          R=5000)
+java_sab_bs.interval = java_sab_bs %>% 
+  CI.percentile(probs = c(.025, .975))
+  
+
+df = data.frame(rbind(java_sab_bs.interval, java_dom_bs.interval))
+df$medida = c('Sabado', 'Domingo')
+df %>% 
+  ggplot(aes(x = medida, ymin = X2.5., ymax = X97.5.)) + 
+  geom_errorbar(width = .2)
+
+```
+
+
+```{r}
+java_diff_sab_dom.SD <- bootstrap2(data = (java_sab)$users, 
+               data2 = (java_dom)$users,
+               sd)
+
+java_diff_sab_dom.SD.CI = CI.percentile(java_diff_sab_dom.SD, probs = c(.025, .975))
+
+data.frame(java_diff_sab_dom.SD.CI) %>% 
+  ggplot(aes(x = "Diferenca", ymin = X2.5., ymax = X97.5.)) + 
+  geom_errorbar(width = .2)
+```
 
