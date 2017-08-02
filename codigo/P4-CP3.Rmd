@@ -21,7 +21,7 @@ dados_github <- read.csv("../dados/github-users-committing-filetypes.csv")
 
 ##1. Dada a amostra dos dados do github, podemos eleger o dia mais produtivo de uma linguagem durante a semana?
 
-```{r warning = FALSE}
+```{r warning=FALSE}
 java_repos <- dados_github %>% 
   filter(file_extension == 'java') %>% 
     mutate(week_day = wday(ymd(paste(the_year, formatC(the_month, width=2, flag="0"), formatC(month_day, width=2, flag="0")))))
@@ -67,12 +67,13 @@ java_6_bs.interval = java_6_bs %>%
 
 
 df = data.frame(rbind(java_2_bs.interval, java_3_bs.interval, java_4_bs.interval, java_5_bs.interval, java_6_bs.interval))
-df$medida = c(2,3,4,5,6)
+df$dia_da_semana = c(2,3,4,5,6)
 df %>% 
-  ggplot(aes(x = medida, ymin = X2.5., ymax = X97.5.)) + 
+  ggplot(aes(x = dia_da_semana, ymin = X2.5., ymax = X97.5.)) + 
   geom_errorbar(width = .2)
 ```
 
+Podemos ver que os intervalos de usuários estão bem próximos um dos outros, terça feira possui uma mediana entre [3585~3873], com um nível de confiança de 95. Com o mesmo nível de confiança, vemos que a sexta ficou com uma mediana mais baixa: [3317~3531], mas será que por obter um intervelo abaixo do interlao da mediana da terça feira, pode mos concluir que a terça feira será um dia mais produtivo que a sexta feira no uso geral (fora da amostra)?
 
 ```{r}
 java_diff_36.SD <- bootstrap2(data = (java_3)$users, 
@@ -82,12 +83,13 @@ java_diff_36.SD <- bootstrap2(data = (java_3)$users,
 java_diff_36.SD.CI = CI.percentile(java_diff_36.SD, probs = c(.025, .975))
 
 data.frame(java_diff_36.SD.CI) %>% 
-  ggplot(aes(x = "Diferenca", ymin = X2.5., ymax = X97.5.)) + 
+  ggplot(aes(x = "Diferenca (positivo: maior popularidade para terca feira, negativo: para sexta)", ymin = X2.5., ymax = X97.5.)) + 
   geom_errorbar(width = .2)
 ```
 
 
-No grafico acima, vemos o intervalo de diferenca entre dois dias da semana: terca e sexta feira, que sao os mais diferentes, sendo terca o mais produtivo e sexta o menos, de acordo com o grafico anterior. Mas ainda assim, ao analisarmos o intervalo calculado pelo desvio padrao, vemos que ele cruza o 0, indicando que nenhuma conclusao pode ser tirada a partir dele.
+No gráfico acima, vemos o intervalo de diferença entre dois dias da semana: terça e sexta feira, que são os mais diferentes, sendo terça o mais produtivo e sexta o menos, de acordo com o gráfico anterior. Mas ainda assim, ao analisarmos o intervalo calculado pelo desvio padrão, vemos que ele cruza o 0, indicando que nenhuma conclusão pode ser tirada a partir dele, ou seja, na população, não podemos concluir que na população, teremos uma popularidade maior de java na terça do que na sexta feira.
+
 
 ### Pergunta derivada: 
 
@@ -119,6 +121,7 @@ df %>%
 
 ```
 
+Vemos que sábado e domingo estão bem próximos, onde o intervalo da popularidade de java no sábado está entre [1985~2141] e o intervalo da mediana da popularidade de Java no domingo esta entre [2087~2208], ambos com um nivel de confianca de 95%. A seguir, vamos comparar esses dois dias pra saber se podemos tirar alguma conclusao a respeito da populacao.
 
 ```{r}
 java_diff_sab_dom.SD <- bootstrap2(data = (java_sab)$users, 
@@ -128,7 +131,42 @@ java_diff_sab_dom.SD <- bootstrap2(data = (java_sab)$users,
 java_diff_sab_dom.SD.CI = CI.percentile(java_diff_sab_dom.SD, probs = c(.025, .975))
 
 data.frame(java_diff_sab_dom.SD.CI) %>% 
-  ggplot(aes(x = "Diferenca", ymin = X2.5., ymax = X97.5.)) + 
+  ggplot(aes(x = "Diferenca (positivo para maior popularidade no sabado e negativo para domingo)", ymin = X2.5., ymax = X97.5.)) + 
   geom_errorbar(width = .2)
 ```
 
+Vemos que o grafico de comparacao da popularidade de java entre o sabado e domingo calculado pelo desvio padrao abrange valores positivos e negativos, impossibilitando uma conclusao sobre a populacao do github (fora da amostra). Apesar de o domingo possuir um intervalo mais alto de popularidade do que o sabado, essa conclusao so pode ser tirada na nossa amostra, impedindo uma conclusao para a populacao.
+
+
+##2) Arquivos de extensões utilizadas para desenvolvimento web(html,css,js,ts) tem um uso maior no primeiro trimestre de 2017 do que a mesma época de 2016 ?
+
+```{r}
+linguagens_web <- dados_github %>%
+  filter(file_extension == 'html' | file_extension == 'css' | file_extension == 'js' | file_extension == 'ts')
+
+linguagens_web_trimestre1 <- linguagens_web  %>%
+  filter(the_month == 1 | the_month == 2 |the_month == 3)
+
+linguagens_web_2016 <- linguagens_web_trimestre1  %>%
+  filter(the_year == 2016)
+
+linguagens_web_2017 <- linguagens_web_trimestre1  %>%
+  filter(the_year == 2017)
+```
+
+
+```{r}
+#Diferença de popularidade
+b <- bootstrap2(data = (linguagens_web_2017)$users,
+               data2 = (linguagens_web_2016)$users,
+               sd)
+
+b.ci = CI.percentile(b, probs = c(.025, .975))
+
+data.frame(b.ci) %>%
+  ggplot(aes(x = "Diferença (positivo para 2017, negativo para 2016)", ymin = X2.5., ymax = X97.5.)) +
+  geom_errorbar(width = .2) +
+  geom_hline(yintercept = 0, colour = "darkorange")
+```
+
+Vemos então que o comparativo entre o primeiro trimestre de 2016 e 2017 pendeu para um dos lados, no caso para os valores positivos. Na comparacao, os valores positivos significam que em 2017 esses arquivos foram mais populares do que em 2016, chegamos a essa conclusao usando o desvio padrao e para um nivel de confianca de 95%. Como o intervalo ficou apenas nos valores positivos, podemos expandir essa conclusao para a populacao, mas ressaltando que ainda existe uma possibilidade de erro estimado em 5%.
