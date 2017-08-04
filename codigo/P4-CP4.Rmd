@@ -1,0 +1,116 @@
+---
+title: "P4-CP4"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE} 
+library(dplyr) 
+library(plotly)
+library(ggplot2)
+library(tidyr)
+library(readr)
+library(lubridate)
+library(resample)
+library(coin)
+
+dados_github <- read.csv("../dados/github-users-committing-filetypes.csv")
+```
+
+##1. Dada a amostra dos dados do github, podemos eleger o dia mais produtivo de uma linguagem durante a semana?
+
+```{r warning=FALSE}
+java_repos <- dados_github %>% 
+  filter(file_extension == 'java') %>% 
+    mutate(week_day = wday(ymd(paste(the_year, formatC(the_month, width=2, flag="0"), formatC(month_day, width=2, flag="0")))))
+
+java_2 <- java_repos %>% 
+  filter(week_day == 2)
+java_3 <- java_repos %>% 
+  filter(week_day == 3)
+java_4 <- java_repos %>% 
+  filter(week_day == 4)
+java_5 <- java_repos %>% 
+  filter(week_day == 5)
+java_6 <- java_repos %>% 
+  filter(week_day == 6)
+
+#Fazendo boostrap das medianas para popularidade de cada dia.
+
+java_2_bs = bootstrap(java_2,
+                          median(users),
+                          R=5000)
+java_2_bs.interval = java_2_bs %>% 
+  CI.percentile(probs = c(.025, .975))
+java_3_bs = bootstrap(java_3,
+                          median(users),
+                          R=5000)
+java_3_bs.interval = java_3_bs %>% 
+  CI.percentile(probs = c(.025, .975))
+java_4_bs = bootstrap(java_4,
+                          median(users),
+                          R=5000)
+java_4_bs.interval = java_4_bs %>% 
+  CI.percentile(probs = c(.025, .975))
+java_5_bs = bootstrap(java_5,
+                          median(users),
+                          R=5000)
+java_5_bs.interval = java_5_bs %>% 
+  CI.percentile(probs = c(.025, .975))
+java_6_bs = bootstrap(java_6,
+                          median(users),
+                          R=5000)
+java_6_bs.interval = java_6_bs %>% 
+  CI.percentile(probs = c(.025, .975))
+
+
+df = data.frame(rbind(java_2_bs.interval, java_3_bs.interval, java_4_bs.interval, java_5_bs.interval, java_6_bs.interval))
+df$dia_da_semana = c(2,3,4,5,6)
+df %>% 
+  ggplot(aes(x = dia_da_semana, ymin = X2.5., ymax = X97.5.)) + 
+  geom_errorbar(width = .2)
+```
+
+Podemos ver que os intervalos de usu?rios est?o bem pr?ximos um dos outros, ter?a feira possui uma mediana entre [3585~3873], com um n?vel de confian?a de 95. Com o mesmo n?vel de confian?a, vemos que a sexta ficou com uma mediana mais baixa: [3317~3531], mas ser? que por obter um intervelo abaixo do interlao da mediana da ter?a feira, pode mos concluir que a ter?a feira ser? um dia mais produtivo que a sexta feira no uso geral (fora da amostra)?
+
+```{r}
+java_diff_35.diff <- bootstrap2(data = (java_3)$users, 
+               data2 = (java_5)$users,
+               median)
+
+
+java_diff_35.diff.CI = CI.percentile(java_diff_35.diff, probs = c(.025, .975))
+
+data.frame(java_diff_35.diff.CI) %>% 
+  ggplot(aes(x = "Diferenca (positivo: maior popularidade para terca feira, negativo: para sexta)", ymin = X2.5., ymax = X97.5.)) + 
+  geom_errorbar(width = .2)
+```
+
+No grafico acima, vemos o intervalo que representa a diferenca entre dois dias da semana: terca e quinta feira. Ao analisarmos o intervalo da diferenca, calculado pela mediana, vemos que ele cruzao o zero, indicando que nenhuma conclusao pode ser tirada a partir dele, ou seja, na populacao nao podemos concluir que teremos uma popularidade de java maior na terca do que na quinta, nem ao contrario.
+
+
+```{r}
+java_35 <- rbind(java_3,java_5)
+
+oneway_test(users ~ as.factor(week_day), 
+            data = java_35, 
+            distribution = "exact")
+
+oneway_test(users ~ as.factor(week_day), 
+            data = java_35, 
+            distribution = "exact") %>% 
+  pvalue()
+
+```
+
+```{r}
+median_test(users ~ as.factor(week_day), 
+            data = java_35, 
+            distribution = "exact")
+
+  #permutationTest2(java_35, median(users), treatment = week_day)$stats %>% t()
+```
+
