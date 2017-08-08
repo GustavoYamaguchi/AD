@@ -95,22 +95,49 @@ No grafico acima, vemos o intervalo que representa a diferenca entre dois dias d
 ```{r}
 java_35 <- rbind(java_3,java_5)
 
-oneway_test(users ~ as.factor(week_day), 
+wilcox_test(users ~ as.factor(week_day), 
             data = java_35, 
             distribution = "exact")
 
-oneway_test(users ~ as.factor(week_day), 
-            data = java_35, 
-            distribution = "exact") %>% 
-  pvalue()
-
-```
-
-```{r}
 median_test(users ~ as.factor(week_day), 
             data = java_35, 
             distribution = "exact")
 
-  #permutationTest2(java_35, median(users), treatment = week_day)$stats %>% t()
+```
+
+```{r}
+diffs = replicate(10000, {
+  medianas = java_35 %>% 
+    mutate(dia_embaralhado = sample(week_day, n())) %>% 
+    group_by(dia_embaralhado) %>% 
+    summarise(mediana = median(users))
+  java_terca = medianas %>% 
+    filter(dia_embaralhado == "3")
+  java_quinta = medianas %>% 
+    filter(dia_embaralhado == "5")
+  return(java_terca$mediana - java_quinta$mediana)
+})
+glimpse(diffs)
+
+diff_median = median(java_3$users) - median(java_5$users)
+
+tibble(diferenca = diffs) %>% 
+  ggplot(aes(x = diferenca)) + 
+  geom_histogram(bins = 30) + 
+  geom_vline(xintercept = diff_median, color='darkorange') +
+  geom_vline(xintercept = diff_median * -1, color='darkorange')
+
+```
+
+
+
+```{r}
+medianas.terca_x_quinta = java_35 %>% 
+  group_by(week_day) %>% 
+    summarise(mediana = median(users))
+
+diff.medianas.terca_x_quinta = diff(medianas.terca_x_quinta$mediana)
+  
+p.valor = sum(abs(diffs) >= abs(diff.medianas.terca_x_quinta)) / length(diffs)
 ```
 
