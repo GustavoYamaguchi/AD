@@ -74,7 +74,9 @@ df %>%
   geom_errorbar(width = .2)
 ```
 
-Podemos ver que os intervalos de usu?rios est?o bem pr?ximos um dos outros, ter?a feira possui uma mediana entre [3585~3873], com um n?vel de confian?a de 95. Com o mesmo n?vel de confian?a, vemos que a sexta ficou com uma mediana mais baixa: [3317~3531], mas ser? que por obter um intervelo abaixo do interlao da mediana da ter?a feira, pode mos concluir que a ter?a feira ser? um dia mais produtivo que a sexta feira no uso geral (fora da amostra)?
+Podemos ver que os intervalos de usu?rios est?o bem pr?ximos um dos outros, ter?a feira possui uma mediana entre [3585~3873], com um n?vel de confian?a de 95. Com o mesmo n?vel de confian?a, vemos que a sexta ficou com uma mediana mais baixa: [3317~3531], mas sera que por obter um intervelo abaixo do interlao da mediana da terca feira, pode mos concluir que a terca feira sera um dia mais produtivo que a sexta feira no uso geral (fora da amostra)?
+
+Vamos comparar a diferenca entre terca e quinta, para saber se podemos concluir que um dia tem maior popularidade de java que o outro:
 
 ```{r}
 java_diff_35.diff <- bootstrap2(data = (java_3)$users, 
@@ -85,27 +87,21 @@ java_diff_35.diff <- bootstrap2(data = (java_3)$users,
 java_diff_35.diff.CI = CI.percentile(java_diff_35.diff, probs = c(.025, .975))
 
 data.frame(java_diff_35.diff.CI) %>% 
-  ggplot(aes(x = "Diferenca (positivo: maior popularidade para terca feira, negativo: para sexta)", ymin = X2.5., ymax = X97.5.)) + 
+  ggplot(aes(x = "Diferenca (positivo: maior popularidade para terca feira, negativo: para quinta)", ymin = X2.5., ymax = X97.5.)) + 
   geom_errorbar(width = .2)
 ```
 
 No grafico acima, vemos o intervalo que representa a diferenca entre dois dias da semana: terca e quinta feira. Ao analisarmos o intervalo da diferenca, calculado pela mediana, vemos que ele cruzao o zero, indicando que nenhuma conclusao pode ser tirada a partir dele, ou seja, na populacao nao podemos concluir que teremos uma popularidade de java maior na terca do que na quinta, nem ao contrario.
 
 
+#Teste de Hipotese 
+
+Queremos verificar agora se com teste de hipótese podemos conlcuir se existe diferenca entre a popularidade de java para os seguintes dias: terca e quinta.
+Vamos utilizar os testes de permutacao para implementar nosso teste de hipotese.
+
 ```{r}
 java_35 <- rbind(java_3,java_5)
 
-wilcox_test(users ~ as.factor(week_day), 
-            data = java_35, 
-            distribution = "exact")
-
-median_test(users ~ as.factor(week_day), 
-            data = java_35, 
-            distribution = "exact")
-
-```
-
-```{r}
 diffs = replicate(10000, {
   medianas = java_35 %>% 
     mutate(dia_embaralhado = sample(week_day, n())) %>% 
@@ -117,7 +113,6 @@ diffs = replicate(10000, {
     filter(dia_embaralhado == "5")
   return(java_terca$mediana - java_quinta$mediana)
 })
-glimpse(diffs)
 
 diff_median = median(java_3$users) - median(java_5$users)
 
@@ -129,7 +124,11 @@ tibble(diferenca = diffs) %>%
 
 ```
 
+No grafico acima vemos dois tracos laranjas, esse valor é de +-96, que eh a diferenca das medianas de modificacoes em arquivos java na terca e quinta feira na nossa amostra do github; valores maiores que essa diferenca (em modulo), sao as permutacoes que negam nossa hipotese nula.
+Hipotese nula: nao existe associacao entre a terca e quinta feira, para a LP Java. 
+Hipotese alternativa: existe associacao entre os dias observados, para a LP Java. 
 
+Agora Calculemos o p-valor:
 
 ```{r}
 medianas.terca_x_quinta = java_35 %>% 
@@ -139,5 +138,29 @@ medianas.terca_x_quinta = java_35 %>%
 diff.medianas.terca_x_quinta = diff(medianas.terca_x_quinta$mediana)
   
 p.valor = sum(abs(diffs) >= abs(diff.medianas.terca_x_quinta)) / length(diffs)
+p.valor
 ```
 
+O p-valor calculado foi de 31.4%. Em outras palavras: encontraremos valores maiores ou igual ao nosso (+-96) 31.4% das vezes em amostras. 
+
+Nossa hipotese nula que diz que nao existe associacao entre os dias da semana, quando o limiar para rejeicao da nossa hipotese nula eh de 5% ou menor.
+A conclusao que chegamos eh que: nao podemos rejeitar a nossa hipotese nula, ja que estamos bem acima disso (31.4%).
+
+Temos outras alternativas de calculo do p-valor, que dao valores bem distintos:
+
+```{r}
+wilcox_test(users ~ as.factor(week_day), 
+            data = java_35, 
+            distribution = "exact")
+
+median_test(users ~ as.factor(week_day), 
+            data = java_35, 
+            distribution = "exact")
+
+```
+
+Uma das ferramentas diz ser 25.6%, a outra 61.5%.
+
+#Comparando IC x Teste de hipotese:
+
+Em ambos tivemos resultados condizentes, no primeiro grafico observamos que os resultados sao bem parecidos e que dificilmente chegariamos a uma conclusao assertiva. IC nao nos deu esse resultado assertivo, tampouco o teste de hipotese, que só nos possibilita dizer que nao chegamos a uma conclusao definitiva.
