@@ -1,0 +1,48 @@
+---
+title: "P5-CP1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE} 
+library(dplyr) 
+library(plotly)
+library(ggplot2)
+library(tidyr)
+library(readr)
+library(lubridate)
+library(resample)
+library(coin)
+
+dados <- read.csv("../dados/speed-dating.csv")
+```
+
+```{r}
+dados_mulheres <- dados %>% 
+    filter(gender == 0)
+dados_homens <- dados %>% 
+    filter(gender == 1)
+
+ggplot(dados, aes(x = attr, y = like)) + 
+  geom_point(alpha = 0.4)
+```
+
+
+```{r}
+ggplot(dados_homens, aes(x = attr, y = like)) + 
+  geom_point(alpha = 0.4)
+
+```
+
+```{r}
+
+ggplot(dados_mulheres, aes(x = attr, y = like)) + 
+  geom_point(alpha = 0.4)
+
+```
+
+
