@@ -9,40 +9,69 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE} 
-library(dplyr) 
-library(plotly)
-library(ggplot2)
-library(tidyr)
-library(readr)
-library(lubridate)
-library(resample)
-library(coin)
+library(tidyverse)
+library(GGally)
+library(ggfortify)
+library(broom)
+require(ISLR)
+library(modelr)
 
 dados <- read.csv("../dados/speed-dating.csv")
+dados_mulheres <- dados %>% 
+    filter(gender == 0, attr != "NA", sinc != "NA", intel != "NA", fun != "NA", amb != "NA", shar != "NA", like != "NA", prob != "NA")
+dados_homens <- dados %>% 
+    filter(gender == 1, attr != "NA", sinc != "NA", intel != "NA", fun != "NA", amb != "NA", shar != "NA", like != "NA", prob != "NA")
 ```
 
 ```{r}
-dados_mulheres <- dados %>% 
-    filter(gender == 0)
-dados_homens <- dados %>% 
-    filter(gender == 1)
-
 ggplot(dados, aes(x = attr, y = like)) + 
   geom_point(alpha = 0.4)
 ```
 
 
-```{r}
-ggplot(dados_homens, aes(x = attr, y = like)) + 
-  geom_point(alpha = 0.4)
 
-```
 
 ```{r}
-
 ggplot(dados_mulheres, aes(x = attr, y = like)) + 
   geom_point(alpha = 0.4)
 
 ```
+
+```{r}
+dados_homens %>% 
+  select(attr, fun, amb, like) %>% 
+  ggpairs(lower = list(continuous = wrap("points", alpha = 0.3)))
+```
+
+
+
+```{r}
+dados_mulheres %>% 
+  select(attr, fun, amb, like) %>% 
+  ggpairs(lower = list(continuous = wrap("points", alpha = 0.3)))
+
+```
+
+
+```{r}
+dados_mulheres = dados_mulheres %>% 
+  filter(fun != 0.0) %>% 
+  mutate(funLog = log2(fun))
+
+dados_mulheres.model = lm(like ~ funLog, data = dados_mulheres)
+
+dados_m_augmented = dados_mulheres %>% 
+  add_predictions(dados_mulheres.model) %>% 
+  add_residuals(dados_mulheres.model)
+
+# Modelo x dados
+dados_m_augmented %>% 
+  ggplot(aes(x = funLog)) + 
+  geom_line(aes(y = pred), size = 2, colour = "blue") + 
+  geom_point(aes(y = like))
+
+```
+
+
 
 
