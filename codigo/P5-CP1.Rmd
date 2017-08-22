@@ -47,7 +47,7 @@ dados_homens %>%
 
 ```{r}
 dados_mulheres %>% 
-  select(attr, fun, amb, like) %>% 
+  select(attr, fun, shar, like) %>% 
   ggpairs(lower = list(continuous = wrap("points", alpha = 0.3)))
 
 ```
@@ -55,8 +55,8 @@ dados_mulheres %>%
 
 ```{r}
 dados_mulheres = dados_mulheres %>% 
-  filter(fun != 0.0) %>% 
-  mutate(funLog = log2(fun))
+  filter(fun != 0.0, attr != 0.0) %>% 
+  mutate(funLog = log2(fun), attrLog = log2(attr))
 
 dados_mulheres.model = lm(like ~ funLog, data = dados_mulheres)
 
@@ -72,6 +72,43 @@ dados_m_augmented %>%
 
 ```
 
+```{r}
+dados_mulheres.modelAttr = lm(like ~ attrLog, data = dados_mulheres)
+
+dados_m_augmented_attr = dados_mulheres %>% 
+  add_predictions(dados_mulheres.modelAttr) %>% 
+  add_residuals(dados_mulheres.modelAttr)
+
+# Modelo x dados
+dados_m_augmented_attr %>% 
+  ggplot(aes(x = attrLog)) + 
+  geom_line(aes(y = pred), size = 2, colour = "blue") + 
+  geom_count(aes(y = like))
+
+```
+
+```{r}
+tidy(dados_mulheres.model, conf.int = TRUE)
+tidy(dados_mulheres.modelAttr, conf.int = TRUE)
+```
+
+
+2. Quais variaveis qualificadas por um candidato explicam melhor a nota atribuida a ele?
+
+```{r}
+dados_mulheres_multi = lm(like ~ fun + attr + shar, data = subset(dados_mulheres, select = -c(field,from,career)))
+adv_augmented = dados_mulheres %>% 
+  add_predictions(dados_mulheres_multi) %>% 
+  add_residuals(dados_mulheres_multi)
+
+adv_augmented %>% 
+  ggplot(aes(x = like)) + 
+  geom_count(aes(y = resid))
+
+glance(dados_mulheres_multi, conf.int = TRUE)
+tidy(dados_mulheres_multi, conf.int = TRUE)
+autoplot(dados_mulheres_multi)
+```
 
 
 
