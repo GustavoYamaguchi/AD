@@ -19,31 +19,30 @@ library(modelr)
 dados <- read.csv("../dados/speed-dating.csv")
 dados_mulheres <- dados %>% 
     filter(gender == 0, attr != "NA", sinc != "NA", intel != "NA", fun != "NA", amb != "NA", shar != "NA", like != "NA", prob != "NA")
-dados_homens <- dados %>% 
-    filter(gender == 1, attr != "NA", sinc != "NA", intel != "NA", fun != "NA", amb != "NA", shar != "NA", like != "NA", prob != "NA")
 ```
 
-```{r}
-ggplot(dados, aes(x = attr, y = like)) + 
-  geom_point(alpha = 0.4)
-```
+Estamos analisando dados de encontros romanticos, conhecidos como speed dating que duram aproximadamente 4 minutos, nosso conjunto possui encontros realizados entre 310 pessoas. 
+Nosso dataset eh bem explicativo e possui grande quantidade de variáveis, tais como, raça, campo de estudo, idade das 2 pessoas envolvidas num encontro, genero, cidade que onde os participantes moram, interesses em atividades especificas, classificacoes da propria pessoa e classificacoes para a pessoa com quem se encontrou (quanto achou inteligente, ambicioso, atraente, divertido, etc).
 
+Levantando questionamentos:
 
+1. Para as mulheres, qual a variável (entre atracao e diversao) mais importante para uma nota final, de quanto gostou, do candidato?
 
 
 ```{r}
 ggplot(dados_mulheres, aes(x = attr, y = like)) + 
-  geom_point(alpha = 0.4)
-
+  geom_jitter(alpha = 0.4)
 ```
+
+O grafico acima exibe notas dadas aos candidatos dos encontros, no eixo x o quao eh atraente e no eixo y quanto gostou da outra pessoa. 
+Vemos um espalhamento dos dados, com algumas nuvens no meio do grafico, dificultando uma avaliacao do quanto a beleza influencia na nota final recebida pelo candidato.
 
 ```{r}
-dados_homens %>% 
-  select(attr, fun, amb, like) %>% 
-  ggpairs(lower = list(continuous = wrap("points", alpha = 0.3)))
+ggplot(dados_mulheres, aes(x = fun, y = like)) + 
+  geom_jitter(alpha = 0.4)
 ```
 
-
+Semelhante ao grafico de beleza, o de diversao, tambem possui grande espalhamento dos dados, e precisamos de um metodo para poder afimar qual das variaveis pesa mais na classificacao final.
 
 ```{r}
 dados_mulheres %>% 
@@ -51,6 +50,8 @@ dados_mulheres %>%
   ggpairs(lower = list(continuous = wrap("points", alpha = 0.3)))
 
 ```
+
+Eplicar graficos acima
 
 
 ```{r}
@@ -72,6 +73,8 @@ dados_m_augmented %>%
 
 ```
 
+Explicar ajuste com logaritmo
+
 ```{r}
 dados_mulheres.modelAttr = lm(like ~ attrLog, data = dados_mulheres)
 
@@ -87,13 +90,15 @@ dados_m_augmented_attr %>%
 
 ```
 
+Eplicar grafico acima
+
 ```{r}
 tidy(dados_mulheres.model, conf.int = TRUE)
 tidy(dados_mulheres.modelAttr, conf.int = TRUE)
 ```
 
 
-2. Quais variaveis qualificadas por um candidato explicam melhor a nota atribuida a ele?
+2. Quais variaveis (classificacoes para a pessoa com quem se encontrou) explicam melhor a nota atribuida de uma mulher para a pessoa com quem se encontrou? 
 
 ```{r}
 dados_mulheres_multi = lm(like ~ fun + attr + shar, data = subset(dados_mulheres, select = -c(field,from,career)))
@@ -107,7 +112,6 @@ adv_augmented %>%
 
 glance(dados_mulheres_multi, conf.int = TRUE)
 tidy(dados_mulheres_multi, conf.int = TRUE)
-autoplot(dados_mulheres_multi)
 ```
 
 
