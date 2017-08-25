@@ -1,0 +1,25 @@
+---
+title: "P5-CP2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+library(GGally)
+library(ggfortify)
+library(broom)
+require(ISLR)
+library(modelr)
+
+data = read.csv("../dados/speed-dating2.csv")
+data <- data %>%
+  mutate(decNmbr = case_when(.$dec == "no" ~ 0, 
+                              .$dec == "yes" ~ 1))
+
+```
+
